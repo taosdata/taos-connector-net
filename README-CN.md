@@ -25,6 +25,7 @@
 
 | **Connector 版本** | **TDengine 版本**  | **主要功能**                   |
 |------------------|------------------|----------------------------|
+| 3.1.2            | 3.2.1.0/3.1.1.18 | 修复 schemaless 资源释放         |
 | 3.1.1            | 3.2.1.0/3.1.1.18 | 支持 varbinary 和 geometry 类型 |
 | 3.1.0            | 3.2.1.0/3.1.1.18 | WebSocket 使用原生实现           |
 
@@ -1121,7 +1122,8 @@ namespace WSADO
 ```
 
 * 连接参数与[建立连接](#建立连接)中的连接参数一致。
-* TDengineParameter 的 name 需要以 @ 开头，如 @0、@1、@2 等，value 需要 C# 列类型与 TDengine 列类型一一对应，具体对应关系请参考 [TDengine DataType 和 C# DataType](#tdengine-datatype-和-c-datatype)。
+* TDengineParameter 的 name 需要以 @ 开头，如 @0、@1、@2 等，value 需要 C# 列类型与 TDengine
+  列类型一一对应，具体对应关系请参考 [TDengine DataType 和 C# DataType](#tdengine-datatype-和-c-datatype)。
 
 ### 更多示例程序
 
