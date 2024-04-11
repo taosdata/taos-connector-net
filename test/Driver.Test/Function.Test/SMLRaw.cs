@@ -107,8 +107,11 @@ namespace Function.Test.SML
             if (errno != 0)
             {
                 var errStr = NativeMethods.Error(result);
+                NativeMethods.FreeResult(result);
                 throw new Exception($"errno:{errno},errStr:{errStr}");
             }
+
+            NativeMethods.FreeResult(result);
             return totalRows;
         }
     }
