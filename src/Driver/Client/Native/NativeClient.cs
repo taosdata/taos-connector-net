@@ -81,11 +81,8 @@ namespace TDengine.Driver.Client.Native
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(line);
             var result = NativeMethods.SchemalessInsertRawTTLWithReqid(_conn, utf8Bytes, utf8Bytes.Length,
                 out _, (int)protocol, (int)precision, ttl, reqId);
-            var errno = NativeMethods.ErrorNo(result);
-            if (errno != 0)
-            {
-                throw new TDengineError(errno, NativeMethods.Error(result));
-            }
+            CheckError(result);
+            NativeMethods.FreeResult(result);
         }
 
         private void CheckError(IntPtr result)
