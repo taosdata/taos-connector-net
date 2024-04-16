@@ -11,7 +11,6 @@ namespace TDengine.TMQ.WebSocket
     {
         private readonly TMQOptions _options;
         private readonly TMQConnection _connection;
-        private ulong _lastMessageId;
 
         private IDeserializer<TValue> valueDeserializer;
 
@@ -50,7 +49,6 @@ namespace TDengine.TMQ.WebSocket
 
             var consumeResult = new ConsumeResult<TValue>(resp.MessageId, resp.Topic, resp.VgroupId, resp.Offset,
                 (TMQ_RES)resp.MessageType);
-            _lastMessageId = resp.MessageId;
             if (!NeedGetData((TMQ_RES)resp.MessageType)) return null;
             var result = new TMQWSRows(resp, _connection, TimeZoneInfo.Local);
             while (result.Read())
@@ -104,12 +102,12 @@ namespace TDengine.TMQ.WebSocket
 
         public void Commit(ConsumeResult<TValue> consumerResult)
         {
-            _connection.Commit(consumerResult.MessageId);
+            _connection.CommitOffset(consumerResult.Topic, consumerResult.Partition, consumerResult.Offset);
         }
 
         public List<TopicPartitionOffset> Commit()
         {
-            _connection.Commit(_lastMessageId);
+            _connection.Commit();
             return Committed(TimeSpan.Zero);
         }
 

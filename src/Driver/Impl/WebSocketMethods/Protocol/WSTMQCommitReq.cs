@@ -5,7 +5,5 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
     public class WSTMQCommitReq
     {
         [JsonProperty("req_id")] public ulong ReqId { get; set; }
-
-        [JsonProperty("message_id")] public ulong MessageId { get; set; }
     }
 }
