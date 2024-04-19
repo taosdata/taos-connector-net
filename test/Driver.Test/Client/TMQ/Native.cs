@@ -27,5 +27,13 @@ namespace Driver.Test.Client.TMQ
             var topic = "tmq_commit_test_topic";
             this.ConsumerCommitTest(this._nativeConnectString, db, topic, this._nativeTMQCfg);
         }
+
+        [Fact]
+        public void NativeAutoCommitTest()
+        {
+            var db = "tmq_auto_commit_test";
+            var topic = "tmq_auto_commit_test_topic";
+            this.ConsumerAutoCommitTest(this._nativeConnectString, db, topic, this._nativeTMQCfgAutoCommit);
+        }
     }
 }

@@ -11,6 +11,9 @@ namespace TDengine.TMQ.WebSocket
     {
         private readonly TMQOptions _options;
         private readonly TMQConnection _connection;
+        private readonly bool _autoCommit;
+        private readonly int _autoCommitInterval;
+        private DateTime _nextCommitTime;
 
         private IDeserializer<TValue> valueDeserializer;
 
@@ -37,10 +40,31 @@ namespace TDengine.TMQ.WebSocket
             {
                 this.valueDeserializer = builder.ValueDeserializer;
             }
+
+            if (_options.EnableAutoCommit != "true") return;
+            _autoCommit = true;
+            if (!string.IsNullOrEmpty(_options.AutoCommitIntervalMs))
+            {
+                _autoCommitInterval = int.Parse(_options.AutoCommitIntervalMs);
+            }
+            else
+            {
+                _autoCommitInterval = 5000;
+            }
         }
 
         public ConsumeResult<TValue> Consume(int millisecondsTimeout)
         {
+            if (_autoCommit)
+            {
+                var now = DateTime.Now;
+                if (now >= _nextCommitTime)
+                {
+                    Commit();
+                    _nextCommitTime = now.AddMilliseconds(_autoCommitInterval);
+                }
+            }
+
             var resp = _connection.Poll(millisecondsTimeout);
             if (!resp.HaveMessage)
             {

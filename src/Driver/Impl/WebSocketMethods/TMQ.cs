@@ -61,7 +61,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     ClientId = options.ClientId,
                     OffsetRest = options.AutoOffsetReset,
                     Topics = topics,
-                    AutoCommit = options.EnableAutoCommit,
+                    AutoCommit = "false",
                     AutoCommitIntervalMs = options.AutoCommitIntervalMs,
                     WithTableName = options.MsgWithTableName
                 });
