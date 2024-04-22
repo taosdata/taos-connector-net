@@ -45,7 +45,14 @@ namespace TDengine.TMQ.WebSocket
             _autoCommit = true;
             if (!string.IsNullOrEmpty(_options.AutoCommitIntervalMs))
             {
-                _autoCommitInterval = int.Parse(_options.AutoCommitIntervalMs);
+                try
+                {
+                    _autoCommitInterval = int.Parse(_options.AutoCommitIntervalMs);
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException("Invalid auto commit interval", e);
+                }
             }
             else
             {
