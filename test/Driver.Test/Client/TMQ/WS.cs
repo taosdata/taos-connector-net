@@ -27,5 +27,13 @@ namespace Driver.Test.Client.TMQ
             var topic = "ws_tmq_commit_test_topic";
             this.ConsumerCommitTest(this._wsConnectString, db, topic, this._wsTMQCfg);
         }
+
+        [Fact]
+        public void WSAutoCommitTest()
+        {
+            var db = "ws_tmq_auto_commit_test";
+            var topic = "ws_tmq_auto_commit_test_topic";
+            this.ConsumerAutoCommitTest(this._wsConnectString, db, topic, this._wsTMQCfgAutoCommit);
+        }
     }
 }

@@ -11,7 +11,9 @@ namespace TDengine.TMQ.WebSocket
     {
         private readonly TMQOptions _options;
         private readonly TMQConnection _connection;
-        private ulong _lastMessageId;
+        private readonly bool _autoCommit;
+        private readonly int _autoCommitInterval;
+        private DateTime _nextCommitTime;
 
         private IDeserializer<TValue> valueDeserializer;
 
@@ -38,10 +40,38 @@ namespace TDengine.TMQ.WebSocket
             {
                 this.valueDeserializer = builder.ValueDeserializer;
             }
+
+            if (_options.EnableAutoCommit != "true") return;
+            _autoCommit = true;
+            if (!string.IsNullOrEmpty(_options.AutoCommitIntervalMs))
+            {
+                try
+                {
+                    _autoCommitInterval = int.Parse(_options.AutoCommitIntervalMs);
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException("Invalid auto commit interval", e);
+                }
+            }
+            else
+            {
+                _autoCommitInterval = 5000;
+            }
         }
 
         public ConsumeResult<TValue> Consume(int millisecondsTimeout)
         {
+            if (_autoCommit)
+            {
+                var now = DateTime.Now;
+                if (now >= _nextCommitTime)
+                {
+                    Commit();
+                    _nextCommitTime = now.AddMilliseconds(_autoCommitInterval);
+                }
+            }
+
             var resp = _connection.Poll(millisecondsTimeout);
             if (!resp.HaveMessage)
             {
@@ -50,7 +80,6 @@ namespace TDengine.TMQ.WebSocket
 
             var consumeResult = new ConsumeResult<TValue>(resp.MessageId, resp.Topic, resp.VgroupId, resp.Offset,
                 (TMQ_RES)resp.MessageType);
-            _lastMessageId = resp.MessageId;
             if (!NeedGetData((TMQ_RES)resp.MessageType)) return null;
             var result = new TMQWSRows(resp, _connection, TimeZoneInfo.Local);
             while (result.Read())
@@ -104,12 +133,12 @@ namespace TDengine.TMQ.WebSocket
 
         public void Commit(ConsumeResult<TValue> consumerResult)
         {
-            _connection.Commit(consumerResult.MessageId);
+            _connection.CommitOffset(consumerResult.Topic, consumerResult.Partition, consumerResult.Offset);
         }
 
         public List<TopicPartitionOffset> Commit()
         {
-            _connection.Commit(_lastMessageId);
+            _connection.Commit();
             return Committed(TimeSpan.Zero);
         }
 

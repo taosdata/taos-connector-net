@@ -61,7 +61,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     ClientId = options.ClientId,
                     OffsetRest = options.AutoOffsetReset,
                     Topics = topics,
-                    AutoCommit = options.EnableAutoCommit,
+                    AutoCommit = "false",
                     AutoCommitIntervalMs = options.AutoCommitIntervalMs,
                     WithTableName = options.MsgWithTableName
                 });
@@ -109,17 +109,16 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             });
         }
 
-        public WSTMQCommitResp Commit(ulong messageId)
+        public WSTMQCommitResp Commit()
         {
-            return Commit(_GetReqId(), messageId);
+            return Commit(_GetReqId());
         }
 
-        public WSTMQCommitResp Commit(ulong reqId, ulong messageId)
+        public WSTMQCommitResp Commit(ulong reqId)
         {
             return SendJsonBackJson<WSTMQCommitReq, WSTMQCommitResp>(WSTMQAction.TMQCommit, new WSTMQCommitReq
             {
                 ReqId = reqId,
-                MessageId = messageId
             });
         }
 
@@ -251,7 +250,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string TDUseSSL => Get("useSSL");
 
         public string TDToken => Get("token");
-        
+
         public string TDEnableCompression => Get("ws.message.enableCompression");
 
         public string TDConnectUser => Get("td.connect.user");
