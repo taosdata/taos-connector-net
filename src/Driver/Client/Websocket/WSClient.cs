@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net.WebSockets;
 using TDengine.Driver.Impl.WebSocketMethods;
 
 namespace TDengine.Driver.Client.Websocket
@@ -7,7 +8,8 @@ namespace TDengine.Driver.Client.Websocket
     public class WSClient : ITDengineClient
     {
         private Connection _connection;
-        private TimeZoneInfo _tz;
+        private readonly TimeZoneInfo _tz;
+        private readonly ConnectionStringBuilder _builder;
 
         public WSClient(ConnectionStringBuilder builder)
         {
@@ -18,6 +20,7 @@ namespace TDengine.Driver.Client.Websocket
                 builder.EnableCompression);
 
             _connection.Connect();
+            _builder = builder;
         }
 
         private static string GetUrl(ConnectionStringBuilder builder)
@@ -59,12 +62,72 @@ namespace TDengine.Driver.Client.Websocket
             }
         }
 
+        private void Reconnect()
+        {
+            if (!_builder.AutoReconnect)
+                return;
+
+            Connection connection = null;
+            for (int i = 0; i < _builder.ReconnectRetryCount; i++)
+            {
+                try
+                {
+                    // sleep
+                    System.Threading.Thread.Sleep(_builder.ReconnectIntervalMs);
+                    connection = new Connection(GetUrl(_builder), _builder.Username, _builder.Password,
+                        _builder.Database, _builder.ConnTimeout, _builder.ReadTimeout, _builder.WriteTimeout,
+                        _builder.EnableCompression);
+                    connection.Connect();
+                    break;
+                }
+                catch (Exception)
+                {
+                    if (connection != null)
+                    {
+                        connection.Close();
+                        connection = null;
+                    }
+                }
+            }
+
+            if (connection == null)
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
+                    "websocket connection reconnect failed");
+            }
+
+            if (_connection != null)
+            {
+                _connection.Close();
+            }
+
+            _connection = connection;
+        }
+
         public IStmt StmtInit()
         {
             return StmtInit(ReqId.GetReqId());
         }
 
         public IStmt StmtInit(long reqId)
+        {
+            try
+            {
+                return DoStmtInit(reqId);
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                return DoStmtInit(reqId);
+            }
+        }
+
+        private IStmt DoStmtInit(long reqId)
         {
             var resp = _connection.StmtInit((ulong)reqId);
             return new WSStmt(resp.StmtId, _tz, _connection);
@@ -76,6 +139,24 @@ namespace TDengine.Driver.Client.Websocket
         }
 
         public IRows Query(string query, long reqId)
+        {
+            try
+            {
+                return DoQuery(query, reqId);
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                return DoQuery(query, reqId);
+            }
+        }
+
+        private IRows DoQuery(string query, long reqId)
         {
             var resp = _connection.Query(query, (ulong)reqId);
             if (resp.IsUpdate)
@@ -93,6 +174,24 @@ namespace TDengine.Driver.Client.Websocket
 
         public long Exec(string query, long reqId)
         {
+            try
+            {
+                return DoExec(query, reqId);
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                return DoExec(query, reqId);
+            }
+        }
+
+        private long DoExec(string query, long reqId)
+        {
             var resp = _connection.Query(query, (ulong)reqId);
             if (!resp.IsUpdate)
             {
@@ -103,6 +202,26 @@ namespace TDengine.Driver.Client.Websocket
         }
 
         public void SchemalessInsert(string[] lines, TDengineSchemalessProtocol protocol,
+            TDengineSchemalessPrecision precision,
+            int ttl, long reqId)
+        {
+            try
+            {
+                DoSchemalessInsert(lines, protocol, precision, ttl, reqId);
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                DoSchemalessInsert(lines, protocol, precision, ttl, reqId);
+            }
+        }
+
+        private void DoSchemalessInsert(string[] lines, TDengineSchemalessProtocol protocol,
             TDengineSchemalessPrecision precision,
             int ttl, long reqId)
         {

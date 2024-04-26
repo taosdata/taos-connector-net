@@ -10,25 +10,35 @@ namespace TDengine.Driver
         public byte[] ExtendedErrorBytes { get; }
         public string ExtendedErrorString { get; }
 
-        public TDengineError(int code, string error) : base($"code:[0x{(code&0xffff):x}],error:{error}")
+        public enum InternalErrorCode
         {
-            Code = code&0xffff;
+            WS_RECONNECT_FAILED = 0xf001,
+            WS_UNEXPECTED_MESSAGE = 0xf002,
+            WS_CONNECTION_CLOSED = 0xf003,
+            WS_WRITE_TIMEOUT = 0xf004,
+            WS_CONNEC_FAILED = 0xf005,
+            WS_RECEIVE_CLOSE_FRAME = 0xf006,
+        }
+
+        public TDengineError(int code, string error) : base($"code:[0x{(code & 0xffff):x}],error:{error}")
+        {
+            Code = code & 0xffff;
             Error = error;
         }
 
         public TDengineError(int code, string error, byte[] extendedErrorBytes, string extendedErrorString) : base(
-            $"code:[0x{(code&0xffff):x}],error:{error},extendedBytes:{Format(extendedErrorBytes)},extendedString:{extendedErrorString}")
+            $"code:[0x{(code & 0xffff):x}],error:{error},extendedBytes:{Format(extendedErrorBytes)},extendedString:{extendedErrorString}")
         {
-            Code = code&0xffff;
+            Code = code & 0xffff;
             Error = error;
             ExtendedErrorBytes = extendedErrorBytes;
             ExtendedErrorString = extendedErrorString;
         }
 
         public TDengineError(int code, string error, string extendedErrorString) : base(
-            $"code:[0x{(code&0xffff):x}],error:{error},extendedString:{extendedErrorString}")
+            $"code:[0x{(code & 0xffff):x}],error:{error},extendedString:{extendedErrorString}")
         {
-            Code = code&0xffff;
+            Code = code & 0xffff;
             Error = error;
             ExtendedErrorString = extendedErrorString;
         }

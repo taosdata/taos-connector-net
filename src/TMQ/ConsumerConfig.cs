@@ -4,7 +4,9 @@ namespace TDengine.TMQ
 {
     public class ConsumerConfig : Config
     {
-        public ConsumerConfig() : base() { }
+        public ConsumerConfig() : base()
+        {
+        }
 
         public ConsumerConfig(Config config) : base(config)
         {
@@ -69,7 +71,7 @@ namespace TDengine.TMQ
             get => Get("token");
             set => this.SetObject("token", value);
         }
-        
+
         public string TDEnableCompression
         {
             get => Get("ws.message.enableCompression");
@@ -103,7 +105,25 @@ namespace TDengine.TMQ
         public string TDConnectType
         {
             get => Get("td.connect.type");
-            set => SetObject("td.connect.type",value);
+            set => SetObject("td.connect.type", value);
+        }
+
+        public string TDReconnect
+        {
+            get => Get("ws.autoReconnect");
+            set => SetObject("ws.autoReconnect", value);
+        }
+
+        public string TDReconnectRetryCount
+        {
+            get => Get("ws.reconnect.retry.count");
+            set => SetObject("ws.reconnect.retry.count", value);
+        }
+
+        public string TDReconnectIntervalMs
+        {
+            get => Get("ws.reconnect.interval.ms");
+            set => SetObject("ws.reconnect.interval.ms", value);
         }
     }
 }

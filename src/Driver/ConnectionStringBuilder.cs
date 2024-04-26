@@ -21,6 +21,10 @@ namespace TDengine.Driver
         private const string TokenKey = "token";
         private const string UseSSLKey = "useSSL";
         private const string EnableCompressionKey = "enableCompression";
+        private const string AutoReconnectKey = "autoReconnect";
+        private const string ReconnectRetryCountKey = "reconnectRetryCount";
+        private const string ReconnectIntervalMsKey = "reconnectIntervalMs";
+
 
         private enum KeysEnum
         {
@@ -37,6 +41,9 @@ namespace TDengine.Driver
             Token,
             UseSSL,
             EnableCompression,
+            AutoReconnect,
+            ReconnectRetryCount,
+            ReconnectIntervalMs,
             Total
         }
 
@@ -53,6 +60,9 @@ namespace TDengine.Driver
         private string _token = string.Empty;
         private bool _useSSL = false;
         private bool _enableCompression = false;
+        private bool _autoReconnect = false;
+        private int _reconnectRetryCount = 3;
+        private int _reconnectIntervalMs = 2000;
 
         private static readonly IReadOnlyList<string> KeysList;
         private static readonly IReadOnlyDictionary<string, KeysEnum> KeysDict;
@@ -73,6 +83,9 @@ namespace TDengine.Driver
             list[(int)KeysEnum.Token] = TokenKey;
             list[(int)KeysEnum.UseSSL] = UseSSLKey;
             list[(int)KeysEnum.EnableCompression] = EnableCompressionKey;
+            list[(int)KeysEnum.AutoReconnect] = AutoReconnectKey;
+            list[(int)KeysEnum.ReconnectRetryCount] = ReconnectRetryCountKey;
+            list[(int)KeysEnum.ReconnectIntervalMs] = ReconnectIntervalMsKey;
             KeysList = list;
 
             KeysDict = new Dictionary<string, KeysEnum>((int)KeysEnum.Total, StringComparer.OrdinalIgnoreCase)
@@ -89,7 +102,10 @@ namespace TDengine.Driver
                 [WriteTimeoutKey] = KeysEnum.WriteTimeout,
                 [TokenKey] = KeysEnum.Token,
                 [UseSSLKey] = KeysEnum.UseSSL,
-                [EnableCompressionKey] = KeysEnum.EnableCompression
+                [EnableCompressionKey] = KeysEnum.EnableCompression,
+                [AutoReconnectKey] = KeysEnum.AutoReconnect,
+                [ReconnectRetryCountKey] = KeysEnum.ReconnectRetryCount,
+                [ReconnectIntervalMsKey] = KeysEnum.ReconnectIntervalMs
             };
         }
 
@@ -154,6 +170,15 @@ namespace TDengine.Driver
                             case KeysEnum.EnableCompression:
                                 EnableCompression = Convert.ToBoolean(value);
                                 break;
+                            case KeysEnum.AutoReconnect:
+                                AutoReconnect = Convert.ToBoolean(value);
+                                break;
+                            case KeysEnum.ReconnectRetryCount:
+                                ReconnectRetryCount = Convert.ToInt32(value);
+                                break;
+                            case KeysEnum.ReconnectIntervalMs:
+                                ReconnectIntervalMs = Convert.ToInt32(value);
+                                break;
                             default:
                                 throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
                         }
@@ -207,43 +232,87 @@ namespace TDengine.Driver
         public TimeZoneInfo Timezone
         {
             get => _timezone;
-            set => base[TimezoneKey] = _timezone = value;
+            set
+            {
+                base[TimezoneKey] = value.Id;
+                _timezone = value;
+            }
         }
 
         public TimeSpan ConnTimeout
         {
             get => _connTimeout;
-            set => base[ConnTimeoutKey] = _connTimeout = value;
+            set
+            {
+                base[ConnTimeoutKey] = value.ToString();
+                _connTimeout = value;
+            }
         }
 
         public TimeSpan ReadTimeout
         {
             get => _readTimeout;
-            set => base[ReadTimeoutKey] = _readTimeout = value;
+            set
+            {
+                base[ReadTimeoutKey] = value.ToString();
+                _readTimeout = value;
+            }
         }
 
         public TimeSpan WriteTimeout
         {
             get => _writeTimeout;
-            set => base[WriteTimeoutKey] = _writeTimeout = value;
+            set
+            {
+                base[WriteTimeoutKey] = value.ToString();
+                _writeTimeout = value;
+            }
         }
-        
+
         public string Token
         {
             get => _token;
             set => base[TokenKey] = _token = value;
         }
-        
+
         public bool UseSSL
         {
             get => _useSSL;
             set => base[UseSSLKey] = _useSSL = value;
         }
-        
+
         public bool EnableCompression
         {
             get => _enableCompression;
             set => base[EnableCompressionKey] = _enableCompression = value;
+        }
+
+        public bool AutoReconnect
+        {
+            get => _autoReconnect;
+            set => base[AutoReconnectKey] = _autoReconnect = value;
+        }
+
+        public int ReconnectRetryCount
+        {
+            get => _reconnectRetryCount;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("invalid reconnect retry count value", ReconnectRetryCountKey);
+                base[ReconnectRetryCountKey] = _reconnectRetryCount = value;
+            }
+        }
+
+        public int ReconnectIntervalMs
+        {
+            get => _reconnectIntervalMs;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("invalid reconnect interval value", ReconnectIntervalMsKey);
+                base[ReconnectIntervalMsKey] = _reconnectIntervalMs = value;
+            }
         }
 
         public override ICollection Keys => new ReadOnlyCollection<string>((string[])KeysList);
@@ -292,6 +361,12 @@ namespace TDengine.Driver
                     return UseSSL;
                 case KeysEnum.EnableCompression:
                     return EnableCompression;
+                case KeysEnum.AutoReconnect:
+                    return AutoReconnect;
+                case KeysEnum.ReconnectRetryCount:
+                    return ReconnectRetryCount;
+                case KeysEnum.ReconnectIntervalMs:
+                    return ReconnectIntervalMs;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
             }
@@ -353,6 +428,15 @@ namespace TDengine.Driver
                     return;
                 case KeysEnum.EnableCompression:
                     _enableCompression = false;
+                    return;
+                case KeysEnum.AutoReconnect:
+                    _autoReconnect = false;
+                    return;
+                case KeysEnum.ReconnectRetryCount:
+                    _reconnectRetryCount = 3;
+                    return;
+                case KeysEnum.ReconnectIntervalMs:
+                    _reconnectIntervalMs = 2000;
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, null);

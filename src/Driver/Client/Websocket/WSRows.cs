@@ -103,7 +103,7 @@ namespace TDengine.Driver.Client.Websocket
             }
 
             _freed = true;
-            if (_connection != null)
+            if (_connection != null && _connection.IsAvailable())
             {
                 _connection.FreeResult(_resultId);
             }
@@ -164,6 +164,7 @@ namespace TDengine.Driver.Client.Websocket
             {
                 return;
             }
+
             _block = _connection.FetchBlock(_resultId);
             _blockReader.SetBlock(_block, _blockSize);
         }
