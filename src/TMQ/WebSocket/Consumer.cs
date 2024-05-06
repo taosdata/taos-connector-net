@@ -10,10 +10,14 @@ namespace TDengine.TMQ.WebSocket
     public class Consumer<TValue> : IConsumer<TValue>
     {
         private readonly TMQOptions _options;
-        private readonly TMQConnection _connection;
+        private TMQConnection _connection;
         private readonly bool _autoCommit;
         private readonly int _autoCommitInterval;
         private DateTime _nextCommitTime;
+        private readonly bool _reconnect;
+        private readonly int _reconnectRetryCount;
+        private readonly int _reconnectRetryIntervalMs;
+        private List<string> _topics;
 
         private IDeserializer<TValue> valueDeserializer;
 
@@ -41,23 +45,72 @@ namespace TDengine.TMQ.WebSocket
                 this.valueDeserializer = builder.ValueDeserializer;
             }
 
-            if (_options.EnableAutoCommit != "true") return;
-            _autoCommit = true;
-            if (!string.IsNullOrEmpty(_options.AutoCommitIntervalMs))
+            if (_options.EnableAutoCommit == "true")
+            {
+                _autoCommit = true;
+                if (!string.IsNullOrEmpty(_options.AutoCommitIntervalMs))
+                {
+                    if (!int.TryParse(_options.AutoCommitIntervalMs, out _autoCommitInterval))
+                        throw new ArgumentException($"Invalid auto commit interval {_options.AutoCommitIntervalMs}");
+                }
+                else
+                    _autoCommitInterval = 5000;
+            }
+
+            if (_options.TDReconnect == "true")
+            {
+                _reconnect = true;
+                if (!int.TryParse(_options.TDReconnectRetryCount, out _reconnectRetryCount))
+                    throw new ArgumentException($"Invalid reconnect retry count {_options.TDReconnectRetryCount}");
+                if (_reconnectRetryCount < 0)
+                    throw new ArgumentException($"Invalid reconnect retry count {_options.TDReconnectRetryCount}");
+                if (!int.TryParse(_options.TDReconnectIntervalMs, out _reconnectRetryIntervalMs))
+                    throw new ArgumentException($"Invalid reconnect retry intervalMs {_options.TDReconnectIntervalMs}");
+                if (_reconnectRetryIntervalMs < 0)
+                    throw new ArgumentException($"Invalid reconnect retry intervalMs {_options.TDReconnectIntervalMs}");
+            }
+        }
+
+        private void Reconnect()
+        {
+            if (!_reconnect)
+                return;
+            TMQConnection connection = null;
+            for (int i = 0; i < _reconnectRetryCount; i++)
             {
                 try
                 {
-                    _autoCommitInterval = int.Parse(_options.AutoCommitIntervalMs);
+                    System.Threading.Thread.Sleep(_reconnectRetryIntervalMs);
+                    connection = new TMQConnection(_options);
+                    if (_topics != null)
+                    {
+                        connection.Subscribe(_topics, _options);
+                    }
+
+                    break;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    throw new ArgumentException("Invalid auto commit interval", e);
+                    if (connection != null)
+                    {
+                        connection.Close();
+                        connection = null;
+                    }
                 }
             }
-            else
+
+            if (connection == null)
             {
-                _autoCommitInterval = 5000;
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
+                    "websocket connection reconnect failed");
             }
+
+            if (_connection != null)
+            {
+                _connection.Close();
+            }
+
+            _connection = connection;
         }
 
         public ConsumeResult<TValue> Consume(int millisecondsTimeout)
@@ -67,11 +120,29 @@ namespace TDengine.TMQ.WebSocket
                 var now = DateTime.Now;
                 if (now >= _nextCommitTime)
                 {
-                    Commit();
+                    _connection.Commit();
                     _nextCommitTime = now.AddMilliseconds(_autoCommitInterval);
                 }
             }
 
+            try
+            {
+                return DoConsume(millisecondsTimeout);
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                return DoConsume(millisecondsTimeout);
+            }
+        }
+
+        private ConsumeResult<TValue> DoConsume(int millisecondsTimeout)
+        {
             var resp = _connection.Poll(millisecondsTimeout);
             if (!resp.HaveMessage)
             {
@@ -118,12 +189,33 @@ namespace TDengine.TMQ.WebSocket
 
         public void Subscribe(IEnumerable<string> topic)
         {
-            _connection.Subscribe((List<string>)topic, _options);
+            var topics = (List<string>)topic;
+            DoSubscribe(topics);
         }
 
         public void Subscribe(string topic)
         {
-            _connection.Subscribe(new List<string> { topic }, _options);
+            var topics = new List<string> { topic };
+            DoSubscribe(topics);
+        }
+
+        private void DoSubscribe(List<string> topics)
+        {
+            try
+            {
+                _connection.Subscribe(topics, _options);
+                _topics = topics;
+            }
+            catch (Exception e)
+            {
+                if (_connection.IsAvailable(e))
+                {
+                    throw;
+                }
+
+                Reconnect();
+                _connection.Subscribe(topics, _options);
+            }
         }
 
         public void Unsubscribe()
@@ -216,7 +308,8 @@ namespace TDengine.TMQ.WebSocket
 
         public void Close()
         {
-            _connection.Close();
+            if (_connection != null && _connection.IsAvailable())
+                _connection.Close();
         }
 
         private bool NeedGetData(TMQ_RES type)

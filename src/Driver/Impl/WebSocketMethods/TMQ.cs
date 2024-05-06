@@ -263,6 +263,12 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public string TDConnectType => Get("td.connect.type");
 
+        public string TDReconnect => Get("ws.autoReconnect");
+
+        public string TDReconnectRetryCount => Get("ws.reconnect.retry.count");
+
+        public string TDReconnectIntervalMs => Get("ws.reconnect.interval.ms");
+
         public TMQOptions(IEnumerable<KeyValuePair<string, string>> config)
         {
             this.properties = new Dictionary<string, string>();

@@ -16,7 +16,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private readonly TimeSpan _readTimeout;
         private readonly TimeSpan _writeTimeout;
 
-        private const int InternalError = -1;
         private ulong _reqId;
         private readonly TimeSpan _defaultConnTimeout = TimeSpan.FromMinutes(1);
         private readonly TimeSpan _defaultReadTimeout = TimeSpan.FromMinutes(5);
@@ -65,7 +64,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             if (_client.State != WebSocketState.Open)
             {
-                throw new TDengineError(InternalError, $"connect to {addr} fail");
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNEC_FAILED,
+                    $"connect to {addr} fail");
             }
         }
 
@@ -94,7 +94,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             var respBytes = Receive(out var messageType);
             if (messageType != WebSocketMessageType.Text)
             {
-                throw new TDengineError(-1, "receive unexpected binary message");
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    "receive unexpected binary message");
             }
 
             var resp = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(respBytes));
@@ -108,14 +109,16 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             var respBytes = Receive(out var messageType);
             if (messageType != WebSocketMessageType.Text)
             {
-                throw new TDengineError(-1, "receive unexpected binary message", respBytes, reqStr);
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    "receive unexpected binary message", respBytes, reqStr);
             }
 
             var resp = JsonConvert.DeserializeObject<T2>(Encoding.UTF8.GetString(respBytes));
             // Console.WriteLine(Encoding.UTF8.GetString(respBytes));
             if (resp.Action != action)
             {
-                throw new TDengineError(-1, $"receive unexpected action {resp.Action},req:{reqStr}",
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    $"receive unexpected action {resp.Action},req:{reqStr}",
                     Encoding.UTF8.GetString(respBytes));
             }
 
@@ -149,6 +152,12 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         private async Task SendAsync(ArraySegment<byte> data, WebSocketMessageType messageType)
         {
+            if (!IsAvailable())
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED,
+                    "websocket connection is closed");
+            }
+
             using (var cts = new CancellationTokenSource())
             {
                 cts.CancelAfter(_writeTimeout);
@@ -158,7 +167,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 }
                 catch (OperationCanceledException)
                 {
-                    throw new TDengineError(InternalError, "write message timeout");
+                    throw new TDengineError((int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT,
+                        "write message timeout");
                 }
             }
         }
@@ -166,21 +176,15 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private void SendText(string request)
         {
             var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(request));
-            Task.Run(async () =>
-            {
-                await SendAsync(data, WebSocketMessageType.Text).ConfigureAwait(true);
-            });
+            Task.Run(async () => { await SendAsync(data, WebSocketMessageType.Text).ConfigureAwait(true); }).Wait();
         }
 
         private void SendBinary(byte[] request)
         {
             var data = new ArraySegment<byte>(request);
-            Task.Run(async () =>
-            {
-                await SendAsync(data, WebSocketMessageType.Binary).ConfigureAwait(true);
-            });
+            Task.Run(async () => { await SendAsync(data, WebSocketMessageType.Binary).ConfigureAwait(true); }).Wait();
         }
-        
+
         private byte[] Receive(out WebSocketMessageType messageType)
         {
             var task = Task.Run(async () => await ReceiveAsync().ConfigureAwait(true));
@@ -188,9 +192,15 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             messageType = task.Result.Item2;
             return task.Result.Item1;
         }
-        
-        private async Task<Tuple<byte[],WebSocketMessageType>> ReceiveAsync()
+
+        private async Task<Tuple<byte[], WebSocketMessageType>> ReceiveAsync()
         {
+            if (!IsAvailable())
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED,
+                    "websocket connection is closed");
+            }
+
             using (var cts = new CancellationTokenSource())
             {
                 cts.CancelAfter(_readTimeout);
@@ -202,13 +212,18 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
                     do
                     {
-                        result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token).ConfigureAwait(false);
+                        result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token)
+                            .ConfigureAwait(false);
 
                         if (result.MessageType == WebSocketMessageType.Close)
                         {
-                            await _client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait(false);
-                            throw new TDengineError(InternalError, "receive websocket close frame");
+                            await _client
+                                .CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
+                                .ConfigureAwait(false);
+                            throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME,
+                                "receive websocket close frame");
                         }
+
                         memoryStream.Write(buffer, 0, result.Count);
                     } while (!result.EndOfMessage);
 
@@ -226,6 +241,28 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             catch (Exception)
             {
                 // ignored
+            }
+        }
+
+        public bool IsAvailable(Exception e = null)
+        {
+            if (_client.State != WebSocketState.Open)
+                return false;
+
+            switch (e)
+            {
+                case null:
+                    return true;
+                case WebSocketException _:
+                    return false;
+                case AggregateException ae:
+                    return !(ae.InnerException is WebSocketException);
+                case TDengineError te:
+                    return te.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
+                           te.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
+                           te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT;
+                default:
+                    return true;
             }
         }
     }
