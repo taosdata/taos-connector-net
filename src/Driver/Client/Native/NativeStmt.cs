@@ -102,13 +102,14 @@ namespace TDengine.Driver.Client.Native
                 }
                 else
                 {
-                    IntPtr p = Marshal.AllocHGlobal(TDengineConstant.ByteSize);
+                    IntPtr p;
                     byte[] bs;
                     IntPtr lPtr;
                     switch (data[i])
                     {
                         case bool val:
                             bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
+                            p = Marshal.AllocHGlobal(TDengineConstant.BoolSize);
                             bs = BitConverter.GetBytes(val);
                             Marshal.Copy(bs, 0, p, bs.Length);
                             needFreePointer.Add(p);
@@ -365,6 +366,7 @@ namespace TDengine.Driver.Client.Native
             {
                 multiBind[i] = GenerateBindColumn(arrays[i], field[i]);
             }
+
             try
             {
                 NativeMethods.StmtBindParamBatch(_stmt, multiBind);
@@ -382,27 +384,27 @@ namespace TDengine.Driver.Client.Native
         {
             switch (array.GetType().GetElementType())
             {
-                case Type byteType when byteType == typeof(bool?) :
+                case Type byteType when byteType == typeof(bool?):
                     return MultiBind.MultiBindBool((bool?[])array);
-                case Type byteType when byteType == typeof(bool) :
+                case Type byteType when byteType == typeof(bool):
                     return MultiBind.MultiBindBool((bool[])array);
-                
-                case Type byteType when byteType == typeof(sbyte?) :
+
+                case Type byteType when byteType == typeof(sbyte?):
                     return MultiBind.MultiBindTinyInt((sbyte?[])array);
-                case Type byteType when byteType == typeof(sbyte) :
+                case Type byteType when byteType == typeof(sbyte):
                     return MultiBind.MultiBindTinyInt((sbyte[])array);
-                
-                case Type byteType when byteType == typeof(short?) :
+
+                case Type byteType when byteType == typeof(short?):
                     return MultiBind.MultiBindSmallInt((short?[])array);
-                case Type byteType when byteType == typeof(short) :
+                case Type byteType when byteType == typeof(short):
                     return MultiBind.MultiBindSmallInt((short[])array);
-                
-                case Type byteType when byteType == typeof(int?) :
+
+                case Type byteType when byteType == typeof(int?):
                     return MultiBind.MultiBindInt((int?[])array);
-                case Type byteType when byteType == typeof(int) :
+                case Type byteType when byteType == typeof(int):
                     return MultiBind.MultiBindInt((int[])array);
-                
-                case Type byteType when byteType == typeof(long?) :
+
+                case Type byteType when byteType == typeof(long?):
                     switch ((TDengineDataType)field.type)
                     {
                         case TDengineDataType.TSDB_DATA_TYPE_BIGINT:
@@ -412,7 +414,7 @@ namespace TDengine.Driver.Client.Native
                         default:
                             throw new NotSupportedException($"bind param type long to {field.type} not supported");
                     }
-                case Type byteType when byteType == typeof(long) :
+                case Type byteType when byteType == typeof(long):
                     switch ((TDengineDataType)field.type)
                     {
                         case TDengineDataType.TSDB_DATA_TYPE_BIGINT:
@@ -423,48 +425,49 @@ namespace TDengine.Driver.Client.Native
                             throw new NotSupportedException($"bind param type long to {field.type} not supported");
                     }
 
-                case Type byteType when byteType == typeof(byte?) :
+                case Type byteType when byteType == typeof(byte?):
                     return MultiBind.MultiBindUTinyInt((byte?[])array);
-                case Type byteType when byteType == typeof(byte) :
+                case Type byteType when byteType == typeof(byte):
                     return MultiBind.MultiBindUTinyInt((byte[])array);
-                
-                case Type byteType when byteType == typeof(ushort?) :
+
+                case Type byteType when byteType == typeof(ushort?):
                     return MultiBind.MultiBindUSmallInt((ushort?[])array);
-                case Type byteType when byteType == typeof(ushort) :
+                case Type byteType when byteType == typeof(ushort):
                     return MultiBind.MultiBindUSmallInt((ushort[])array);
-                
-                case Type byteType when byteType == typeof(uint?) :
+
+                case Type byteType when byteType == typeof(uint?):
                     return MultiBind.MultiBindUInt((uint?[])array);
-                case Type byteType when byteType == typeof(uint) :
+                case Type byteType when byteType == typeof(uint):
                     return MultiBind.MultiBindUInt((uint[])array);
-                
-                case Type byteType when byteType == typeof(ulong?) :
+
+                case Type byteType when byteType == typeof(ulong?):
                     return MultiBind.MultiBindUBigInt((ulong?[])array);
-                case Type byteType when byteType == typeof(ulong) :
+                case Type byteType when byteType == typeof(ulong):
                     return MultiBind.MultiBindUBigInt((ulong[])array);
-                
-                case Type byteType when byteType == typeof(float?) :
+
+                case Type byteType when byteType == typeof(float?):
                     return MultiBind.MultiBindFloat((float?[])array);
-                case Type byteType when byteType == typeof(float) :
+                case Type byteType when byteType == typeof(float):
                     return MultiBind.MultiBindFloat((float[])array);
-                
-                case Type byteType when byteType == typeof(double?) :
+
+                case Type byteType when byteType == typeof(double?):
                     return MultiBind.MultiBindDouble((double?[])array);
-                case Type byteType when byteType == typeof(double) :
+                case Type byteType when byteType == typeof(double):
                     return MultiBind.MultiBindDouble((double[])array);
-                
-                case Type byteType when byteType == typeof(DateTime?) :
-                    return MultiBind.MultiBindTimestamp((DateTime?[])array,(TDenginePrecision)field.precision);
-                case Type byteType when byteType == typeof(DateTime) :
-                    return MultiBind.MultiBindTimestamp((DateTime[])array,(TDenginePrecision)field.precision);
-                
-                case Type byteType when byteType == typeof(byte[]) :
+
+                case Type byteType when byteType == typeof(DateTime?):
+                    return MultiBind.MultiBindTimestamp((DateTime?[])array, (TDenginePrecision)field.precision);
+                case Type byteType when byteType == typeof(DateTime):
+                    return MultiBind.MultiBindTimestamp((DateTime[])array, (TDenginePrecision)field.precision);
+
+                case Type byteType when byteType == typeof(byte[]):
                     return MultiBind.MultiBindBytesArray((byte[][])array, (TDengineDataType)field.type);
-                
-                case Type byteType when byteType == typeof(string) :
+
+                case Type byteType when byteType == typeof(string):
                     return MultiBind.MultiBindStringArray((string[])array, (TDengineDataType)field.type);
                 default:
-                    throw new NotSupportedException($"bind param type {array.GetType().GetElementType()} not supported");
+                    throw new NotSupportedException(
+                        $"bind param type {array.GetType().GetElementType()} not supported");
             }
         }
 
@@ -492,13 +495,14 @@ namespace TDengine.Driver.Client.Native
             {
                 return new NativeRows((int)Affected());
             }
+
             var result = NativeMethods.StmtUseResult(_stmt);
             if (result == IntPtr.Zero)
             {
                 throw new Exception("stmt is not query");
             }
 
-            return new NativeRows(result, _tz,true);
+            return new NativeRows(result, _tz, true);
         }
 
         public void Dispose()
