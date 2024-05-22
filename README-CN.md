@@ -25,6 +25,7 @@
 
 | **Connector 版本** | **TDengine 版本**  | **主要功能**                   |
 |------------------|------------------|----------------------------|
+| 3.1.3            | 3.2.1.0/3.1.1.18 | 支持 WebSocket 自动重连          |
 | 3.1.2            | 3.2.1.0/3.1.1.18 | 修复 schemaless 资源释放         |
 | 3.1.1            | 3.2.1.0/3.1.1.18 | 支持 varbinary 和 geometry 类型 |
 | 3.1.0            | 3.2.1.0/3.1.1.18 | WebSocket 使用原生实现           |
@@ -119,6 +120,9 @@ ConnectionStringBuilder 支持的参数如下：
 * readTimeout: WebSocket 读超时时间，仅当 protocol 为 WebSocket 时有效，默认为 5 分钟，使用 `TimeSpan.Parse` 方法解析字符串为 `TimeSpan` 对象。
 * writeTimeout: WebSocket 写超时时间，仅当 protocol 为 WebSocket 时有效，默认为 10 秒，使用 `TimeSpan.Parse` 方法解析字符串为 `TimeSpan` 对象。
 * enableCompression: 是否启用 WebSocket 压缩（dotnet 版本 6 及以上，连接器版本 3.1.1 及以上生效），默认为 false
+* autoReconnect: 是否自动重连（连接器版本 3.1.3 及以上生效），默认为 false
+* reconnectRetryCount: 重连次数（连接器版本 3.1.3 及以上生效），默认为 3
+* reconnectIntervalMs: 重连间隔时间（连接器版本 3.1.3 及以上生效），默认为 2000
 
 ### 指定 URL 和 Properties 获取连接
 
@@ -753,6 +757,9 @@ consumer 支持的配置参数如下：
 * auto.offset.reset: 当 offset 不存在时，从哪里开始消费，可选值为 earliest 或 latest，默认为 latest
 * msg.with.table.name: 消息是否包含表名
 * ws.message.enableCompression: 是否启用 WebSocket 压缩（dotnet 版本 6 及以上，连接器版本 3.1.1 及以上生效），默认为 false
+* ws.autoReconnect: 是否自动重连（连接器版本 3.1.3 及以上生效），默认为 false
+* ws.reconnect.retry.count: 重连次数（连接器版本 3.1.3 及以上生效），默认为 3
+* ws.reconnect.interval.ms: 重连间隔时间（连接器版本 3.1.3 及以上生效），默认为 2000
 
 支持订阅结果集 `Dictionary<string, object>` key 为列名，value 为列值。
 

@@ -25,6 +25,7 @@ Note TDengine no longer supports 32-bit Windows platforms.
 
 | **Connector version** | **TDengine version** | **major features**                   |
 |-----------------------|----------------------|--------------------------------------|
+| 3.1.3                 | 3.2.1.0/3.1.1.18     | support Websocket reconnect          |
 | 3.1.2                 | 3.2.1.0/3.1.1.18     | fix schemaless result release        |
 | 3.1.1                 | 3.2.1.0/3.1.1.18     | support varbinary and geometry       |
 | 3.1.0                 | 3.2.1.0/3.1.1.18     | WebSocket uses native implementation |
@@ -119,6 +120,10 @@ The parameters supported by `ConnectionStringBuilder` are as follows:
 * readTimeout: WebSocket read timeout, only valid when the protocol is WebSocket, the default is 5 minutes, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
 * writeTimeout: WebSocket write timeout, only valid when the protocol is WebSocket, the default is 10 seconds, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
 * enableCompression: Whether to enable WebSocket compression (effective for dotnet version 6 and above, connector version 3.1.1 and above). The default is false.
+* autoReconnect: Whether to enable WebSocket reconnect (connector version 3.1.3 and above). The default is false.
+* reconnectRetryCount: The number of reconnection retries (connector version 3.1.3 and above). The default is 3.
+* reconnectIntervalMs: The interval between reconnection retries (connector version 3.1.3 and above). The default is
+  2000.
 
 ### Specify the URL and Properties to get the connection
 
@@ -753,6 +758,10 @@ The configuration parameters supported by consumer are as follows:
 * auto.offset.reset: When offset does not exist, where to start consumption, the optional value is earliest or latest, the default is latest
 * msg.with.table.name: Whether the message contains the table name
 * ws.message.enableCompression: Whether to enable WebSocket compression (effective for dotnet version 6 and above, connector version 3.1.1 and above). The default is false.
+* ws.autoReconnect: Whether to enable WebSocket reconnect (connector version 3.1.3 and above). The default is false.
+* ws.reconnect.retry.count: The number of reconnection retries (connector version 3.1.3 and above). The default is 3.
+* ws.reconnect.interval.ms: The interval between reconnection retries (connector version 3.1.3 and above). The default
+  is 2000.
 
 Supports subscribing to the result set `Dictionary<string, object>` where the key is the column name and the value is the column value.
 
