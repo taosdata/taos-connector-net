@@ -67,9 +67,9 @@ namespace TDengine.Driver.Impl.NativeMethods
         public static extern int TmqGetResType(IntPtr taosRes);
         //tmq_res_t tmq_get_res_type(TAOS_RES* res);
 
-        [DllImport(DLLName, EntryPoint = "tmq_get_raw_meta", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int TmqGetRawMeta(IntPtr taosRes, out IntPtr rawMetaPtr, out IntPtr rawMetaLengthPtr);
-        //int32_t tmq_get_raw_meta(TAOS_RES* res, const void** raw_meta, int32_t *raw_meta_len);
+        [DllImport(DLLName, EntryPoint = "tmq_get_raw", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int TmqGetRaw(IntPtr taosRes, IntPtr raw);
+        //int32_t     tmq_get_raw(TAOS_RES *res, tmq_raw_data *raw);
 
         [DllImport(DLLName, EntryPoint = "tmq_get_topic_name", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr TmqGetTopicName(IntPtr taosRes);
@@ -132,7 +132,9 @@ namespace TDengine.Driver.Impl.NativeMethods
                     for (int i = 0; i < numOfAssignment; i++)
                     {
                         IntPtr currentAssignmentPtr = new IntPtr(assignmentPtr.ToInt64() + i * structSize);
-                        assignments[i] = (TMQTopicAssignment)Marshal.PtrToStructure(currentAssignmentPtr,typeof(TMQTopicAssignment));
+                        assignments[i] =
+                            (TMQTopicAssignment)Marshal.PtrToStructure(currentAssignmentPtr,
+                                typeof(TMQTopicAssignment));
                     }
 
                     return assignments;
@@ -157,15 +159,14 @@ namespace TDengine.Driver.Impl.NativeMethods
 
         [DllImport(DLLName, EntryPoint = "tmq_commit_offset_sync", CallingConvention = CallingConvention.Cdecl)]
         public static extern int TmqCommitOffsetSync(IntPtr tmq, string pTopicName, int vgId, long offset);
-        
-        [DllImport(DLLName, EntryPoint = "tmq_offset_seek",CallingConvention = CallingConvention.Cdecl)]
-        public static extern int TmqOffsetSeek(IntPtr tmq, string pTopicName, int vgId, long offset);
-        
-        [DllImport(DLLName,EntryPoint = "tmq_get_vgroup_offset",CallingConvention = CallingConvention.Cdecl)]
-        public static extern long TmqGetVgroupOffset(IntPtr res);
-        
-        [DllImport(DLLName,EntryPoint = "tmq_position",CallingConvention = CallingConvention.Cdecl)]
-        public static extern long TmqPosition(IntPtr tmq, string pTopicName, int vgId);
 
+        [DllImport(DLLName, EntryPoint = "tmq_offset_seek", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int TmqOffsetSeek(IntPtr tmq, string pTopicName, int vgId, long offset);
+
+        [DllImport(DLLName, EntryPoint = "tmq_get_vgroup_offset", CallingConvention = CallingConvention.Cdecl)]
+        public static extern long TmqGetVgroupOffset(IntPtr res);
+
+        [DllImport(DLLName, EntryPoint = "tmq_position", CallingConvention = CallingConvention.Cdecl)]
+        public static extern long TmqPosition(IntPtr tmq, string pTopicName, int vgId);
     }
 }

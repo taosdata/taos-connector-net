@@ -2,25 +2,29 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TDengine.Driver;
+using TDengine.Driver.Impl;
 using TDengine.Driver.Impl.NativeMethods;
-using TDengineHelper;
 
 namespace TDengine.TMQ.Native
 {
     public class TMQNativeRows : ITMQRows
     {
-        private IntPtr _result;
+        private readonly IntPtr _result;
         private int _currentRow;
         private List<TDengineMeta> _metas;
-        private int _blockSize;
-        private IntPtr _block = IntPtr.Zero;
+        private int _blockRows;
+        private byte[] _block;
         private bool _completed;
-        private BlockReader _blockReader;
+        private int _blockIndex;
+        private TMQBlockReader.TMQBlockInfo[] _blockInfo;
+        private readonly BlockReader _blockReader;
+        private readonly TMQBlockReader _tmqBlockReader;
 
         public TMQNativeRows(IntPtr result, TimeZoneInfo tz)
         {
             _result = result;
             _blockReader = new BlockReader(0, tz);
+            _tmqBlockReader = new TMQBlockReader(0);
         }
 
         public object GetValue(int ordinal)
@@ -31,14 +35,14 @@ namespace TDengine.TMQ.Native
         public bool Read()
         {
             if (_completed) return false;
-            if (_block == IntPtr.Zero)
+            if (_block == null)
             {
                 FetchBlock();
                 return !_completed;
             }
 
             _currentRow += 1;
-            if (_currentRow != _blockSize) return true;
+            if (_currentRow != _blockRows) return true;
             FetchBlock();
             return !_completed;
         }
@@ -50,43 +54,55 @@ namespace TDengine.TMQ.Native
 
         private void FetchBlock()
         {
-            IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
-            IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
-            try
+            if (_block == null)
             {
-                var code = NativeMethods.FetchRawBlock(_result, numOfRowsPrt, pDataPtr);
-                if (code != 0)
+                int structSize = Marshal.SizeOf(typeof(TMQRawData));
+                IntPtr raw = Marshal.AllocHGlobal(structSize);
+                try
                 {
-                    throw new TDengineError(code, NativeMethods.Error(_result));
-                }
+                    var code = NativeMethods.TmqGetRaw(_result, raw);
+                    if (code != 0)
+                    {
+                        throw new TDengineError(code, NativeMethods.Error(_result));
+                    }
 
-                int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
-                if (numOfRows == 0)
-                {
-                    _completed = true;
+                    TMQRawData rawData = (TMQRawData)Marshal.PtrToStructure(raw, typeof(TMQRawData));
+                    _block = new byte[rawData.rawLen];
+                    Marshal.Copy(rawData.raw, _block, 0, (int)rawData.rawLen);
+                    _blockInfo = _tmqBlockReader.Parse(_block);
+                    _blockIndex = 0;
                 }
-                else if (numOfRows < 0)
+                finally
                 {
-                    throw new TDengineError(NativeMethods.ErrorNo(_result), NativeMethods.Error(_result));
-                }
-                else
-                {
-                    _blockSize = numOfRows;
-                    _currentRow = 0;
-                    FieldCount = NativeMethods.FieldCount(_result);
-                    var tableName = NativeMethods.TmqGetTableName(_result);
-                    TableName = StringHelper.PtrToStringUTF8(tableName);
-                    _metas = NativeMethods.FetchFields(_result);
-                    var dataPtr = Marshal.ReadIntPtr(pDataPtr);
-                    var precision = NativeMethods.ResultPrecision(_result);
-                    _block = dataPtr;
-                    _blockReader.SetTMQBlock(dataPtr, precision);
+                    Marshal.FreeHGlobal(raw);
                 }
             }
-            finally
+            else
             {
-                Marshal.FreeHGlobal(numOfRowsPrt);
-                Marshal.FreeHGlobal(pDataPtr);
+                _blockIndex += 1;
+            }
+
+            if (_blockIndex == _blockInfo.Length)
+            {
+                _completed = true;
+                return;
+            }
+
+            _blockReader.SetTMQBlock(_block, _blockInfo[_blockIndex].precision, _blockInfo[_blockIndex].rawBlockOffset);
+            _blockRows = _blockReader.GetRows();
+            _currentRow = 0;
+
+            FieldCount = _blockInfo[_blockIndex].schemas.Length;
+            TableName = _blockInfo[_blockIndex].tableName;
+            _metas = new List<TDengineMeta>();
+            for (int i = 0; i < FieldCount; i++)
+            {
+                _metas.Add(new TDengineMeta
+                {
+                    name = _blockInfo[_blockIndex].schemas[i].name,
+                    type = _blockInfo[_blockIndex].schemas[i].colType,
+                    size = _blockInfo[_blockIndex].schemas[i].bytes,
+                });
             }
         }
     }

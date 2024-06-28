@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TDengine.Driver;
+using TDengine.Driver.Impl;
 using TDengine.Driver.Impl.WebSocketMethods;
 using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 
@@ -12,17 +13,20 @@ namespace TDengine.TMQ.WebSocket
         private readonly ulong _resultId;
         private int _currentRow;
         private List<TDengineMeta> _metas;
-        private int _blockSize;
+        private int _blockRows;
         private byte[] _block;
+        private int _blockIndex;
+        private TMQBlockReader.TMQBlockInfo[] _blockInfo;
         private bool _completed;
         private readonly BlockReader _blockReader;
-        
+        private readonly TMQBlockReader _tmqBlockReader;
 
         public TMQWSRows(WSTMQPollResp result, TMQConnection connection, TimeZoneInfo tz)
         {
             _connection = connection;
             _resultId = result.MessageId;
             _blockReader = new BlockReader(24, tz);
+            _tmqBlockReader = new TMQBlockReader(38);
         }
 
         public object GetValue(int ordinal)
@@ -40,41 +44,51 @@ namespace TDengine.TMQ.WebSocket
             }
 
             _currentRow += 1;
-            if (_currentRow != _blockSize) return true;
+            if (_currentRow != _blockRows) return true;
             FetchBlock();
             return !_completed;
         }
 
         private void FetchBlock()
         {
-            var fetchResult = _connection.Fetch(_resultId);
-            _completed = fetchResult.Completed;
-            _blockSize = fetchResult.Rows;
-            _currentRow = 0;
-            if (_completed)
+            if (_block == null)
             {
+                var fetchRawResp = _connection.FetchRawBlock(_resultId);
+                _block = fetchRawResp;
+                _blockInfo = _tmqBlockReader.Parse(_block);
+                _blockIndex = 0;
+            }
+            else
+            {
+                _blockIndex += 1;
+            }
+
+            if (_blockIndex == _blockInfo.Length)
+            {
+                _completed = true;
                 return;
             }
 
-            FieldCount = fetchResult.FieldsCount;
-            TableName = fetchResult.TableName;
+            _blockReader.SetTMQBlock(_block, _blockInfo[_blockIndex].precision, _blockInfo[_blockIndex].rawBlockOffset);
+            _blockRows = _blockReader.GetRows();
+            _currentRow = 0;
+
+            FieldCount = _blockInfo[_blockIndex].schemas.Length;
+            TableName = _blockInfo[_blockIndex].tableName;
             _metas = new List<TDengineMeta>();
             for (int i = 0; i < FieldCount; i++)
             {
                 _metas.Add(new TDengineMeta
                 {
-                    name = fetchResult.FieldsNames[i],
-                    type = fetchResult.FieldsTypes[i],
-                    size = (int)fetchResult.FieldsLengths[i]
+                    name = _blockInfo[_blockIndex].schemas[i].name,
+                    type = _blockInfo[_blockIndex].schemas[i].colType,
+                    size = _blockInfo[_blockIndex].schemas[i].bytes,
                 });
             }
-
-            _block = _connection.FetchBlock(_resultId);
-            _blockReader.SetTMQBlock(_block, fetchResult.Precision);
         }
 
         public int FieldCount { get; private set; }
-        
+
         public string TableName { get; private set; }
         public string GetName(int ordinal) => _metas[ordinal].name;
     }
