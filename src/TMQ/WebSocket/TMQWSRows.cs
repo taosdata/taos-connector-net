@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using TDengine.Driver;
-using TDengine.Driver.Impl;
 using TDengine.Driver.Impl.WebSocketMethods;
 using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 

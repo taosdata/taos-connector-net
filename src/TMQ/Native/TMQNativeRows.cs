@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TDengine.Driver;
-using TDengine.Driver.Impl;
 using TDengine.Driver.Impl.NativeMethods;
 
 namespace TDengine.TMQ.Native

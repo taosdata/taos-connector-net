@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TDengine.Driver.Impl
+namespace TDengine.Driver
 {
     public class TMQBlockReader
     {
@@ -154,7 +154,7 @@ namespace TDengine.Driver.Impl
         private string ParseName()
         {
             var nameLen = ParseVariableByteInteger();
-            var name = System.Text.Encoding.UTF8.GetString(_block, _currentPos, nameLen);
+            var name = System.Text.Encoding.UTF8.GetString(_block, _currentPos, nameLen - 1);
             Skip(nameLen);
             return name;
         }

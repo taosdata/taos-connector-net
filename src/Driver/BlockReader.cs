@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.VisualBasic;
 
 namespace TDengine.Driver
 {
@@ -151,14 +150,6 @@ namespace TDengine.Driver
             }
 
             return result;
-        }
-
-        public void SetTMQBlock(IntPtr pBlock, int precision, int offset)
-        {
-            var blockSize = GetBlockSize(pBlock);
-            byte[] dataArray = new byte[blockSize];
-            Marshal.Copy(pBlock, dataArray, 0, blockSize);
-            SetTMQBlock(dataArray, precision, offset);
         }
 
         private bool ItemIsNull(int headOffset, int row) =>
@@ -315,8 +306,8 @@ namespace TDengine.Driver
             }
 
             var dataLength = value.Length - (int)dataOffset;
-            var bufferLenght = buffer.Length - bufferOffset;
-            var minLength = dataLength > bufferLenght ? bufferLenght : dataLength;
+            var bufferLength = buffer.Length - bufferOffset;
+            var minLength = dataLength > bufferLength ? bufferLength : dataLength;
             minLength = minLength > length ? length : minLength;
             Array.Copy(value, (int)dataOffset, buffer, bufferOffset, minLength);
             return minLength;
@@ -368,9 +359,8 @@ namespace TDengine.Driver
             }
 
             var dataLength = value.Length - (int)dataOffset;
-            var bufferLenght = buffer.Length - bufferOffset;
-            var minLength = dataLength > bufferLenght ? bufferLenght : dataLength;
-            minLength = minLength > length ? length : minLength;
+            var bufferLength = buffer.Length - bufferOffset;
+            var minLength = Math.Min(Math.Min(dataLength, bufferLength), length);
             Array.Copy(value, (int)dataOffset, buffer, bufferOffset, minLength);
             return minLength;
         }
