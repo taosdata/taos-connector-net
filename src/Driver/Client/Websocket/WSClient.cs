@@ -158,7 +158,7 @@ namespace TDengine.Driver.Client.Websocket
 
         private IRows DoQuery(string query, long reqId)
         {
-            var resp = _connection.Query(query, (ulong)reqId);
+            var resp = _connection.BinaryQuery(query, (ulong)reqId);
             if (resp.IsUpdate)
             {
                 return new WSRows(resp.AffectedRows);
@@ -192,7 +192,7 @@ namespace TDengine.Driver.Client.Websocket
 
         private long DoExec(string query, long reqId)
         {
-            var resp = _connection.Query(query, (ulong)reqId);
+            var resp = _connection.BinaryQuery(query, (ulong)reqId);
             if (!resp.IsUpdate)
             {
                 _connection.FreeResult(resp.ResultId);

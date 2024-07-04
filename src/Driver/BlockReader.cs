@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.VisualBasic;
 
 namespace TDengine.Driver
 {
@@ -29,7 +28,7 @@ namespace TDengine.Driver
         private byte[] _colType;
         private TimeZoneInfo _tz;
 
-        private readonly int _offset;
+        private int _offset;
         private readonly bool _disableParseTime;
 
 
@@ -84,7 +83,7 @@ namespace TDengine.Driver
             var blockSize = GetBlockSize(pBlock);
             byte[] dataArray = new byte[blockSize];
             Marshal.Copy(pBlock, dataArray, 0, blockSize);
-            SetBlock(dataArray, rows);
+            SetBlock(dataArray);
         }
 
         private Int32 GetBlockSize(IntPtr pBlock)
@@ -92,11 +91,11 @@ namespace TDengine.Driver
             return Marshal.ReadInt32(pBlock + _offset + RawBlockLengthOffset);
         }
 
-        public void SetBlock(byte[] block, int rows)
+        public void SetBlock(byte[] block)
         {
             _block = block;
-            _rows = rows;
-            _nullBitMapOffset = TDengineConstant.BitmapLen(rows);
+            _rows = GetRowCount();
+            _nullBitMapOffset = TDengineConstant.BitmapLen(_rows);
             _lengthOffset = _offset + ColInfoOffset + _cols * ColInfoSize;
             _headerOffset = _offset + ColInfoOffset + _cols * ColInfoSize + _cols * TDengineConstant.Int32Size;
             _colHeadOffset[0] = _headerOffset;
@@ -106,7 +105,7 @@ namespace TDengine.Driver
                 var colLength = BitConverter.ToInt32(block, _lengthOffset + TDengineConstant.Int32Size * i);
                 if (IsVarDataType(_colType[i]))
                 {
-                    _colHeadOffset[i + 1] = _colHeadOffset[i] + TDengineConstant.Int32Size * rows + colLength;
+                    _colHeadOffset[i + 1] = _colHeadOffset[i] + TDengineConstant.Int32Size * _rows + colLength;
                 }
                 else
                 {
@@ -115,15 +114,20 @@ namespace TDengine.Driver
             }
         }
 
-        public void SetTMQBlock(byte[] block, int precision)
+        public void SetTMQBlock(byte[] block, int precision, int offset)
         {
             _block = block;
-            _rows = GetRowCount();
+            _offset = offset;
             _precision = precision;
             _cols = GetColumnCount();
             _colHeadOffset = new int[_cols];
             _colType = GetColTypes();
-            SetBlock(_block, _rows);
+            SetBlock(_block);
+        }
+
+        public int GetRows()
+        {
+            return _rows;
         }
 
         private int GetColumnCount()
@@ -146,14 +150,6 @@ namespace TDengine.Driver
             }
 
             return result;
-        }
-
-        public void SetTMQBlock(IntPtr pBlock, int precision)
-        {
-            var blockSize = GetBlockSize(pBlock);
-            byte[] dataArray = new byte[blockSize];
-            Marshal.Copy(pBlock, dataArray, 0, blockSize);
-            SetTMQBlock(dataArray, precision);
         }
 
         private bool ItemIsNull(int headOffset, int row) =>
@@ -310,8 +306,8 @@ namespace TDengine.Driver
             }
 
             var dataLength = value.Length - (int)dataOffset;
-            var bufferLenght = buffer.Length - bufferOffset;
-            var minLength = dataLength > bufferLenght ? bufferLenght : dataLength;
+            var bufferLength = buffer.Length - bufferOffset;
+            var minLength = dataLength > bufferLength ? bufferLength : dataLength;
             minLength = minLength > length ? length : minLength;
             Array.Copy(value, (int)dataOffset, buffer, bufferOffset, minLength);
             return minLength;
@@ -363,9 +359,8 @@ namespace TDengine.Driver
             }
 
             var dataLength = value.Length - (int)dataOffset;
-            var bufferLenght = buffer.Length - bufferOffset;
-            var minLength = dataLength > bufferLenght ? bufferLenght : dataLength;
-            minLength = minLength > length ? length : minLength;
+            var bufferLength = buffer.Length - bufferOffset;
+            var minLength = Math.Min(Math.Min(dataLength, bufferLength), length);
             Array.Copy(value, (int)dataOffset, buffer, bufferOffset, minLength);
             return minLength;
         }

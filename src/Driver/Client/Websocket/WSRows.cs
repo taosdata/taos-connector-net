@@ -42,7 +42,7 @@ namespace TDengine.Driver.Client.Websocket
 
             _metas = ParseMetas(result);
             _encoding = Encoding.UTF8;
-            _blockReader = new BlockReader(16, FieldCount, result.Precision, result.FieldsTypes, tz);
+            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, tz);
         }
 
         public WSRows(WSStmtUseResultResp result, Connection connection, TimeZoneInfo tz)
@@ -54,7 +54,7 @@ namespace TDengine.Driver.Client.Websocket
             FieldCount = result.FieldsCount;
             _metas = ParseMetas(result);
             _encoding = Encoding.UTF8;
-            _blockReader = new BlockReader(16, FieldCount, result.Precision, result.FieldsTypes, tz);
+            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, tz);
         }
 
         private List<TDengineMeta> ParseMetas(WSQueryResp result)
@@ -156,17 +156,37 @@ namespace TDengine.Driver.Client.Websocket
 
         private void FetchBlock()
         {
-            var fetchResult = _connection.Fetch(_resultId);
-            _completed = fetchResult.Completed;
-            _blockSize = fetchResult.Rows;
-            _currentRow = 0;
+            var fetchRawBlockResult = _connection.FetchRawBlockBinary(_resultId);
+            //Flag           uint64 //8               0
+            //Action         uint64 //8               8
+            //Version        uint16 //2               16
+            //Time           uint64 //8               18
+            //ReqID          uint64 //8               26
+            //Code           uint32 //4               34
+            //MessageLen     uint32 //4               38
+            //Message        string //MessageLen      42
+            //ResultID       uint64 //8               42 + MessageLen
+            //Finished       bool   //1               50 + MessageLen
+            //RawBlockLength uint32 //4               51 + MessageLen
+            //RawBlock       []byte //RawBlockLength  55 + MessageLen + RawBlockLength
+            var version = BitConverter.ToUInt16(fetchRawBlockResult, 16);
+            if (version != 1)
+                throw new Exception("Unsupported fetch raw block version " + version);
+            var code = BitConverter.ToUInt32(fetchRawBlockResult, 34);
+            var messageLen = BitConverter.ToUInt32(fetchRawBlockResult, 38);
+            var message = _encoding.GetString(fetchRawBlockResult, 42, (int)messageLen);
+            if (code != 0)
+                throw new TDengineError((int)code, message);
+            _completed = BitConverter.ToBoolean(fetchRawBlockResult, 50 + (int)messageLen);
             if (_completed)
-            {
                 return;
-            }
-
-            _block = _connection.FetchBlock(_resultId);
-            _blockReader.SetBlock(_block, _blockSize);
+            var rawBlockLength = BitConverter.ToUInt32(fetchRawBlockResult, 51 + (int)messageLen);
+            if (fetchRawBlockResult.Length != 55 + (int)messageLen + rawBlockLength)
+                throw new Exception("Invalid fetch raw block result length");
+            _block = fetchRawBlockResult;
+            _blockReader.SetBlock(_block);
+            _blockSize = _blockReader.GetRows();
+            _currentRow = 0;
         }
     }
 }

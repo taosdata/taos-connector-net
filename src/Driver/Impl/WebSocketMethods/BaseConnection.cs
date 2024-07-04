@@ -88,6 +88,34 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             byteArray[offset + 7] = (byte)(value >> 56);
         }
 
+        protected static void WriteUInt32ToBytes(byte[] byteArray, UInt32 value, int offset)
+        {
+            byteArray[offset + 0] = (byte)value;
+            byteArray[offset + 1] = (byte)(value >> 8);
+            byteArray[offset + 2] = (byte)(value >> 16);
+            byteArray[offset + 3] = (byte)(value >> 24);
+        }
+
+        protected static void WriteUInt16ToBytes(byte[] byteArray, UInt16 value, int offset)
+        {
+            byteArray[offset + 0] = (byte)value;
+            byteArray[offset + 1] = (byte)(value >> 8);
+        }
+
+        protected byte[] SendBinaryBackBytes(byte[] request)
+        {
+            SendBinary(request);
+            var respBytes = Receive(out var messageType);
+            if (messageType == WebSocketMessageType.Binary)
+            {
+                return respBytes;
+            }
+
+            var resp = JsonConvert.DeserializeObject<IWSBaseResp>(Encoding.UTF8.GetString(respBytes));
+            throw new TDengineError(resp.Code, resp.Message, request, Encoding.UTF8.GetString(respBytes));
+        }
+
+
         protected T SendBinaryBackJson<T>(byte[] request) where T : IWSBaseResp
         {
             SendBinary(request);

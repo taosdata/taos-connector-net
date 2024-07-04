@@ -29,6 +29,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
     {
         public const int SetTagsMessage = 1;
         public const int BindMessage = 2;
+        public const int BinaryQueryMessage = 6;
+        public const int FetchRawBlockMessage = 7;
     }
 
     public static class WSTMQAction

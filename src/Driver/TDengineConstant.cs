@@ -417,4 +417,17 @@ namespace TDengine.Driver
         public long begin;
         public long end;
     }
+
+    //typedef struct tmq_raw_data {
+    //void    *raw;
+    //uint32_t raw_len;
+    //uint16_t raw_type;
+    //} tmq_raw_data;
+
+    public struct TMQRawData
+    {
+        public IntPtr raw;
+        public uint rawLen;
+        public ushort rawType;
+    }
 }

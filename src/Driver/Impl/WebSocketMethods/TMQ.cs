@@ -81,28 +81,23 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             });
         }
 
-        public WSTMQFetchResp Fetch(ulong messageId)
+        public byte[] FetchBlock(ulong reqId, ulong messageId)
         {
-            return Fetch(_GetReqId(), messageId);
-        }
-
-        public WSTMQFetchResp Fetch(ulong reqId, ulong messageId)
-        {
-            return SendJsonBackJson<WSTMQFetchReq, WSTMQFetchResp>(WSTMQAction.TMQFetch, new WSTMQFetchReq
+            return SendJsonBackBytes(WSTMQAction.TMQFetchBlock, new WSTMQFetchBlockReq
             {
                 ReqId = reqId,
                 MessageId = messageId
             });
         }
 
-        public byte[] FetchBlock(ulong messageId)
+        public byte[] FetchRawBlock(ulong messageId)
         {
-            return FetchBlock(_GetReqId(), messageId);
+            return FetchRawBlock(_GetReqId(), messageId);
         }
 
-        public byte[] FetchBlock(ulong reqId, ulong messageId)
+        public byte[] FetchRawBlock(ulong reqId, ulong messageId)
         {
-            return SendJsonBackBytes(WSTMQAction.TMQFetchBlock, new WSTMQFetchBlockReq
+            return SendJsonBackBytes(WSTMQAction.TMQFetchRaw, new WSTMQFetchBlockReq
             {
                 ReqId = reqId,
                 MessageId = messageId

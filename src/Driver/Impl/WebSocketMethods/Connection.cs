@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Net.WebSockets;
-using System.Threading;
+using System.Text;
 using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 
 namespace TDengine.Driver.Impl.WebSocketMethods
@@ -12,7 +11,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private readonly string _db = string.Empty;
 
         public Connection(string addr, string user, string password, string db, TimeSpan connectTimeout = default,
-            TimeSpan readTimeout = default, TimeSpan writeTimeout = default, bool enableCompression = false) : base(addr, connectTimeout, readTimeout, writeTimeout,enableCompression)
+            TimeSpan readTimeout = default, TimeSpan writeTimeout = default, bool enableCompression = false) : base(
+            addr, connectTimeout, readTimeout, writeTimeout, enableCompression)
         {
             _user = user;
             _password = password;
@@ -30,36 +30,42 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             });
         }
 
-        public WSQueryResp Query(string sql, ulong reqid = default)
+        public WSQueryResp BinaryQuery(string sql, ulong reqid = default)
         {
             if (reqid == default)
             {
                 reqid = _GetReqId();
             }
 
-            return SendJsonBackJson<WSQueryReq, WSQueryResp>(WSAction.Query, new WSQueryReq
-            {
-                ReqId = reqid,
-                Sql = sql
-            });
+            //p0 uin64  req_id
+            //p0+8 uint64  message_id
+            //p0+16 uint64 action
+            //p0+24 uint16 version
+            //p0+26 uint32 sql_len
+            //p0+30 raw sql
+            var req = new byte[30 + sql.Length];
+            WriteUInt64ToBytes(req, reqid, 0);
+            WriteUInt64ToBytes(req, 0, 8);
+            WriteUInt64ToBytes(req, WSActionBinary.BinaryQueryMessage, 16);
+            WriteUInt16ToBytes(req, 1, 24);
+            WriteUInt32ToBytes(req, (uint)sql.Length, 26);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sql), 0, req, 30, sql.Length);
+
+            return SendBinaryBackJson<WSQueryResp>(req);
         }
 
-        public WSFetchResp Fetch(ulong resultId)
+        public byte[] FetchRawBlockBinary(ulong resultId)
         {
-            return SendJsonBackJson<WSFetchReq, WSFetchResp>(WSAction.Fetch, new WSFetchReq
-            {
-                ReqId = _GetReqId(),
-                ResultId = resultId
-            });
-        }
-
-        public byte[] FetchBlock(ulong resultId)
-        {
-            return SendJsonBackBytes(WSAction.FetchBlock, new WSFetchBlockReq
-            {
-                ReqId = _GetReqId(),
-                ResultId = resultId
-            });
+            //p0 uin64  req_id
+            //p0+8 uint64  message_id
+            //p0+16 uint64 action
+            //p0+24 uint16 version
+            var req = new byte[32];
+            WriteUInt64ToBytes(req, _GetReqId(), 0);
+            WriteUInt64ToBytes(req, resultId, 8);
+            WriteUInt64ToBytes(req, WSActionBinary.FetchRawBlockMessage, 16);
+            WriteUInt64ToBytes(req, 1, 24);
+            return SendBinaryBackBytes(req);
         }
 
         public void FreeResult(ulong resultId)
