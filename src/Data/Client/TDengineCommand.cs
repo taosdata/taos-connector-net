@@ -42,7 +42,7 @@ namespace TDengine.Data.Client
 
             base.Dispose(disposing);
         }
-        
+
         public override int ExecuteNonQuery()
         {
             if (_connection?.State != ConnectionState.Open)
@@ -130,7 +130,7 @@ namespace TDengine.Data.Client
             set
             {
                 _connection = (TDengineConnection)value;
-                if (_stmt == null)
+                if (_stmt == null && _connection != null)
                 {
                     _stmt = _connection.client.StmtInit();
                 }
@@ -158,7 +158,6 @@ namespace TDengine.Data.Client
 
         private IRows Statement()
         {
-
             if (!_isPrepared)
             {
                 _isPrepared = true;
@@ -169,6 +168,7 @@ namespace TDengine.Data.Client
             {
                 return Query();
             }
+
             var isInsert = _stmt.IsInsert();
 
             var pms = _parameters.Value;
