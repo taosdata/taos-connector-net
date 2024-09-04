@@ -14,6 +14,7 @@ namespace TDengine.Data.Client
 
         private TDengineConnection _connection;
         private string _commandText;
+        private bool _isPrepared;
         private IStmt _stmt;
 
         public TDengineCommand()
@@ -102,14 +103,8 @@ namespace TDengine.Data.Client
             get => _commandText;
             set
             {
-                try
-                {
-                    _stmt.Prepare(value);
-                }
-                finally
-                {
-                    _commandText = value;
-                }
+                _isPrepared = false;
+                _commandText = value;
             }
         }
 
@@ -132,7 +127,14 @@ namespace TDengine.Data.Client
         protected override DbConnection DbConnection
         {
             get => _connection;
-            set => _connection = (TDengineConnection)value;
+            set
+            {
+                _connection = (TDengineConnection)value;
+                if (_stmt == null)
+                {
+                    _stmt = _connection.client.StmtInit();
+                }
+            }
         }
 
         protected override DbParameterCollection DbParameterCollection => _parameters.Value;
@@ -156,6 +158,13 @@ namespace TDengine.Data.Client
 
         private IRows Statement()
         {
+
+            if (!_isPrepared)
+            {
+                _isPrepared = true;
+                _stmt.Prepare(_commandText);
+            }
+
             if (!_parameters.IsValueCreated || _parameters.Value.Count == 0)
             {
                 return Query();
