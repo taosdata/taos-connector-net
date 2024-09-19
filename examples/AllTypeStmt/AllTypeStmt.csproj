@@ -5,11 +5,11 @@
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{DA417710-60DA-4C98-9B30-F434B1D6BC34}</ProjectGuid>
+        <ProjectGuid>{2FAFA322-4007-4ACC-95DB-5BAEAB3D0A5F}</ProjectGuid>
         <OutputType>Exe</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>GeometryStmt</RootNamespace>
-        <AssemblyName>GeometryStmt</AssemblyName>
+        <RootNamespace>AllTypeStmt</RootNamespace>
+        <AssemblyName>AllTypeStmt</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -56,4 +56,5 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\TDengine.csproj" />
     </ItemGroup>
+
 </Project>

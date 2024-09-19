@@ -5,11 +5,11 @@
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}</ProjectGuid>
+        <ProjectGuid>{5B2928A5-2688-4506-BFFB-3453C8E71861}</ProjectGuid>
         <OutputType>Exe</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>GeometryQuery</RootNamespace>
-        <AssemblyName>GeometryQuery</AssemblyName>
+        <RootNamespace>AllTypeQuery</RootNamespace>
+        <AssemblyName>AllTypeQuery</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

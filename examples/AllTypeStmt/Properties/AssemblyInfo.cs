@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GeometryQuery")]
+[assembly: AssemblyTitle("AllTypeStmt")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("GeometryQuery")]
+[assembly: AssemblyProduct("AllTypeStmt")]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A")]
+[assembly: Guid("2FAFA322-4007-4ACC-95DB-5BAEAB3D0A5F")]
 
 // Version information for an assembly consists of the following four values:
 //
