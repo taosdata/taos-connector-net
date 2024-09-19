@@ -24,7 +24,13 @@ namespace AllTypeStmt
                     client.Exec("CREATE DATABASE IF NOT EXISTS example_all_type_stmt");
                     // use database
                     client.Exec("USE example_all_type_stmt");
-                    // create table
+                    // create table with json
+                    client.Exec(
+                        "CREATE STABLE IF NOT EXISTS stb_json (" +
+                        "ts TIMESTAMP, " +
+                        "int_col INT) " +
+                        "tags (json_tag json)");
+                    // craete table without json
                     client.Exec(
                         "CREATE STABLE IF NOT EXISTS stb (" +
                         "ts TIMESTAMP, " +
@@ -35,13 +41,21 @@ namespace AllTypeStmt
                         "nchar_col NCHAR(100), " +
                         "varbinary_col VARBINARY(100), " +
                         "geometry_col GEOMETRY(100)) " +
-                        "tags (json_tag json)");
+                        "tags (" +
+                        "int_tag INT, " +
+                        "double_tag DOUBLE, " +
+                        "bool_tag BOOL, " +
+                        "binary_tag BINARY(100), " +
+                        "nchar_tag NCHAR(100), " +
+                        "varbinary_tag VARBINARY(100), " +
+                        "geometry_tag GEOMETRY(100))");
                     using (var stmt = client.StmtInit())
                     {
-                        String sql = "INSERT INTO ? using stb tags(?) VALUES (?,?,?,?,?,?,?,?)";
+                        // prepare sql with json
+                        String sql = "INSERT INTO ? using stb_json tags(?) VALUES (?,?)";
                         stmt.Prepare(sql);
                         // set table name
-                        stmt.SetTableName("ntb");
+                        stmt.SetTableName("ntb_json");
                         // set tags
                         stmt.SetTags(new object[]
                         {
@@ -50,6 +64,56 @@ namespace AllTypeStmt
                         
                         var current = DateTime.Now;
                         // bind rows
+                        stmt.BindRow(new object[]
+                        {
+                            // ts
+                            current,
+                            // int_col
+                            (int)1,
+                        });
+                        
+                        // add batch
+                        stmt.AddBatch();
+                        // execute
+                        stmt.Exec();
+                        // get affected rows
+                        var affectedRows = stmt.Affected();
+                        Console.WriteLine($"Successfully inserted {affectedRows} rows to example_all_type_stmt.ntb_json");
+                        
+                        // prepare sql without json
+                        sql = "INSERT INTO ? using stb tags(?,?,?,?,?,?,?) VALUES (?,?,?,?,?,?,?,?)";
+                        stmt.Prepare(sql);
+                        // set table name
+                        stmt.SetTableName("ntb");
+                        // set tags
+                        stmt.SetTags(new object[]
+                        {
+                            // int_tag
+                            (int)1,
+                            // double_tag
+                            (double) 1.1,
+                            // bool_tag
+                            (bool) true,
+                            // binary_tag
+                            Encoding.UTF8.GetBytes("binary_value"),
+                            // nchar_tag
+                            "nchar_value",
+                            // varbinary_tag
+                            new byte[]
+                            {
+                                0x98,0xf4,0x6e
+                            },
+                            // geometry_tag
+                            new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x59,
+                                0x40, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x59, 0x40
+                            },
+                        });
+
                         stmt.BindRow(new object[]
                         {
                             // ts
@@ -85,7 +149,7 @@ namespace AllTypeStmt
                         // execute
                         stmt.Exec();
                         // get affected rows
-                        var affectedRows = stmt.Affected();
+                        affectedRows = stmt.Affected();
                         Console.WriteLine($"Successfully inserted {affectedRows} rows to example_all_type_stmt.ntb");
                     }
                 }
