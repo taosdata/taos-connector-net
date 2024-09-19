@@ -37,6 +37,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WSObjectDeserialize", "WSOb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp4.8", "WindowsFormsApp4.8\WindowsFormsApp4.8.csproj", "{3002B815-EBD4-446D-B572-7212849EFF61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeometryQuery", "GeometryQuery\GeometryQuery.csproj", "{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeometryStmt", "GeometryStmt\GeometryStmt.csproj", "{DA417710-60DA-4C98-9B30-F434B1D6BC34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +115,14 @@ Global
 		{3002B815-EBD4-446D-B572-7212849EFF61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3002B815-EBD4-446D-B572-7212849EFF61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3002B815-EBD4-446D-B572-7212849EFF61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C7D18AD-AF21-4D0D-BD4C-3C6CB21EA14A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA417710-60DA-4C98-9B30-F434B1D6BC34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA417710-60DA-4C98-9B30-F434B1D6BC34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA417710-60DA-4C98-9B30-F434B1D6BC34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA417710-60DA-4C98-9B30-F434B1D6BC34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
