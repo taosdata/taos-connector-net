@@ -59,6 +59,8 @@ namespace Driver.Test.Client.TMQ
                 { "client.id", "test_tmq_c" },
                 { "enable.auto.commit", "false" },
                 { "msg.with.table.name", "true" },
+                { "session.timeout.ms", "12000" },
+                { "max.poll.interval.ms", "300000" }
             };
 
             this._nativeTMQCfgAutoCommit = new Dictionary<string, string>()
@@ -73,6 +75,8 @@ namespace Driver.Test.Client.TMQ
                 { "enable.auto.commit", "true" },
                 { "auto.commit.interval.ms", "100" },
                 { "msg.with.table.name", "true" },
+                { "session.timeout.ms", "12000" },
+                { "max.poll.interval.ms", "300000" }
             };
 
             this._wsTMQCfg = new Dictionary<string, string>()
@@ -88,7 +92,9 @@ namespace Driver.Test.Client.TMQ
                 { "enable.auto.commit", "false" },
                 { "msg.with.table.name", "true" },
                 { "useSSL", "false" },
-                { "ws.message.enableCompression", "true" }
+                { "ws.message.enableCompression", "true" },
+                { "session.timeout.ms", "12000" },
+                { "max.poll.interval.ms", "300000" }
             };
 
             this._wsTMQCfgAutoCommit = new Dictionary<string, string>()
@@ -105,7 +111,9 @@ namespace Driver.Test.Client.TMQ
                 { "auto.commit.interval.ms", "100" },
                 { "msg.with.table.name", "true" },
                 { "useSSL", "false" },
-                { "ws.message.enableCompression", "true" }
+                { "ws.message.enableCompression", "true" },
+                { "session.timeout.ms", "12000" },
+                { "max.poll.interval.ms", "300000" }
             };
         }
 

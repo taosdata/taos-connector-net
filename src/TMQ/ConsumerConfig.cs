@@ -125,5 +125,17 @@ namespace TDengine.TMQ
             get => Get("ws.reconnect.interval.ms");
             set => SetObject("ws.reconnect.interval.ms", value);
         }
+
+        public string SessionTimeoutMs
+        {
+            get => Get("session.timeout.ms");
+            set => SetObject("session.timeout.ms", value);
+        }
+
+        public string MaxPollIntervalMs
+        {
+            get => Get("max.poll.interval.ms");
+            set => SetObject("max.poll.interval.ms", value);
+        }
     }
 }
