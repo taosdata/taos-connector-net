@@ -186,7 +186,12 @@ namespace Function.Test.TMQ
                 TDConnectPasswd = "taosdata",
                 MsgWithTableName = "true",
                 TDConnectIp = "127.0.0.1",
+                TDConnectPort = "6030",
                 EnableAutoCommit = "true",
+                ClientId = "test_client",
+                AutoCommitIntervalMs = "3000",
+                SessionTimeoutMs = "12000",
+                MaxPollIntervalMs = "300000"
             };
 
 

@@ -63,7 +63,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     Topics = topics,
                     AutoCommit = "false",
                     AutoCommitIntervalMs = options.AutoCommitIntervalMs,
-                    WithTableName = options.MsgWithTableName
+                    WithTableName = options.MsgWithTableName,
+                    SessionTimeoutMs = options.SessionTimeoutMs,
+                    MaxPollIntervalMs = options.MaxPollIntervalMs
                 });
         }
 
@@ -263,6 +265,10 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string TDReconnectRetryCount => Get("ws.reconnect.retry.count");
 
         public string TDReconnectIntervalMs => Get("ws.reconnect.interval.ms");
+
+        public string SessionTimeoutMs => Get("session.timeout.ms");
+
+        public string MaxPollIntervalMs => Get("max.poll.interval.ms");
 
         public TMQOptions(IEnumerable<KeyValuePair<string, string>> config)
         {

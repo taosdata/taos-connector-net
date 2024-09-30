@@ -29,5 +29,11 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
         [JsonProperty("snapshot_enable")] public string SnapshotEnable { get; set; }
 
         [JsonProperty("with_table_name")] public string WithTableName { get; set; }
+
+        //session_timeout_ms
+        [JsonProperty("session_timeout_ms")] public string SessionTimeoutMs { get; set; }
+
+        //max_poll_interval_ms
+        [JsonProperty("max_poll_interval_ms")] public string MaxPollIntervalMs { get; set; }
     }
 }
