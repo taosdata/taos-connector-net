@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using TDengine.Driver;
 
 namespace TDengine.Data.Client
@@ -127,14 +127,7 @@ namespace TDengine.Data.Client
         protected override DbConnection DbConnection
         {
             get => _connection;
-            set
-            {
-                _connection = (TDengineConnection)value;
-                if (_stmt == null && _connection != null)
-                {
-                    _stmt = _connection.client.StmtInit();
-                }
-            }
+            set => _connection = value as TDengineConnection ?? throw new ArgumentException($"The specified connection is not of type {nameof(TDengineConnection)}.");
         }
 
         protected override DbParameterCollection DbParameterCollection => _parameters.Value;
@@ -158,7 +151,12 @@ namespace TDengine.Data.Client
 
         private IRows Statement()
         {
-            if (!_isPrepared)
+			if(_stmt == null && _connection != null)
+			{
+				_stmt = _connection.client.StmtInit();
+			}
+
+			if (!_isPrepared)
             {
                 _isPrepared = true;
                 _stmt.Prepare(_commandText);
