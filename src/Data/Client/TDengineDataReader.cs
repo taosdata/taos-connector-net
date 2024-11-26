@@ -34,6 +34,7 @@ namespace TDengine.Data.Client
                 columns.Add(columnOrdinal);
                 columns.Add(columnSize);
                 columns.Add(dataType);
+                columns.Add(dataTypeName);
 
                 for (int i = 0; i < _fieldCount; i++)
                 {
