@@ -64,7 +64,6 @@ namespace Function.Test.Taosc
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.ResultMeta;
             List<Object> actualResData = actualResult.ResultData;
-            Tools.FreeResult(_res);
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
@@ -128,7 +127,6 @@ namespace Function.Test.Taosc
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.ResultMeta;
             List<Object> actualResData = actualResult.ResultData;
-            Tools.FreeResult(_res);
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
@@ -191,7 +189,6 @@ namespace Function.Test.Taosc
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.ResultMeta;
             List<Object> actualResData = actualResult.ResultData;
-            Tools.FreeResult(_res);
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
@@ -274,7 +271,6 @@ namespace Function.Test.Taosc
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.ResultMeta;
             List<Object> actualResData = actualResult.ResultData;
-            Tools.FreeResult(_res);
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
 
