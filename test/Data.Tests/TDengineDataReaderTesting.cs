@@ -177,7 +177,7 @@ namespace Data.Tests
                 // table name;
                 parameters.Add(new TDengineParameter("#table", "test_types"));
                 // tag name;
-                parameters.Add(new TDengineParameter("$0", "123"));
+                parameters.Add(new TDengineParameter("$0", (int)123));
                 // value
                 parameters.Add(new TDengineParameter("@0", now));
                 parameters.Add(new TDengineParameter("@1", (int)1));
@@ -197,7 +197,7 @@ namespace Data.Tests
                 Assert.Equal(1, affected);
                 parameters.Clear();
                 parameters.Add(new TDengineParameter("#table", "test_types"));
-                parameters.Add(new TDengineParameter("$0", "123"));
+                parameters.Add(new TDengineParameter("$0", (int)123));
                 parameters.Add(new TDengineParameter("@0", nextSecond));
                 parameters.Add(new TDengineParameter("@1", null));
                 parameters.Add(new TDengineParameter("@2", null));
@@ -306,7 +306,7 @@ namespace Data.Tests
                 // table name;
                 parameters.Add(new TDengineParameter("#table", "test_types"));
                 // tag name;
-                parameters.Add(new TDengineParameter("$0", "123"));
+                parameters.Add(new TDengineParameter("$0", (int)123));
                 // value
                 parameters.Add(new TDengineParameter("@0", now));
                 parameters.Add(new TDengineParameter("@1", (int)1));
@@ -326,7 +326,7 @@ namespace Data.Tests
                 Assert.Equal(1, affected);
                 parameters.Clear();
                 parameters.Add(new TDengineParameter("#table", "test_types"));
-                parameters.Add(new TDengineParameter("$0", "123"));
+                parameters.Add(new TDengineParameter("$0", (int)123));
                 parameters.Add(new TDengineParameter("@0", nextSecond));
                 parameters.Add(new TDengineParameter("@1", null));
                 parameters.Add(new TDengineParameter("@2", null));
