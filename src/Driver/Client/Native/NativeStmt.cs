@@ -80,9 +80,7 @@ namespace TDengine.Driver.Client.Native
             }
         }
 
-
-        private TAOS_MULTI_BIND[] GenerateBindList(object[] data, TaosFieldE[] fields, out IntPtr[] needFree,
-            bool isInsert)
+        private TAOS_MULTI_BIND[] GenerateBindList(object[] data, TaosFieldE[] fields, out IntPtr[] needFree, bool isInsert)
         {
             TAOS_MULTI_BIND[] binds = new TAOS_MULTI_BIND[data.Length];
             var needFreePointer = new List<IntPtr>();
@@ -92,7 +90,7 @@ namespace TDengine.Driver.Client.Native
                 {
                     num = 1
                 };
-                if (data[i] == null)
+                if (data[i] == null || Convert.IsDBNull(data[i]))
                 {
                     bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
                     IntPtr p = Marshal.AllocHGlobal(TDengineConstant.ByteSize);
@@ -470,7 +468,6 @@ namespace TDengine.Driver.Client.Native
                         $"bind param type {array.GetType().GetElementType()} not supported");
             }
         }
-
 
         public void AddBatch()
         {

@@ -65,6 +65,47 @@ namespace Data.Tests
         }
 
         [Fact]
+        public void SetConnection_DoesNotThrowException()
+        {
+            //CASE 1: Set an already open connection.
+            using(var command = new TDengineCommand())
+            {
+                command.CommandText = "SELECT * FROM t";
+                var ex = Record.Exception(() => command.Connection = _connection);
+                Assert.Null(ex);
+            }
+
+            //CASE 2: Set an connection that is not yet open.
+            using(var command = new TDengineCommand())
+            {
+                using(var connection = new TDengineConnection("username=root;password=taosdata"))
+                {
+                    command.CommandText = "SELECT * FROM t";
+                    var ex = Record.Exception(() => command.Connection = connection);
+                    Assert.Null(ex);
+                }
+            }
+        }
+
+        [Fact]
+        public void ExecuteNonQuery_WithDBNull()
+        {
+            using(var command = new TDengineCommand(_connection))
+            {
+                command.CommandText = "create table if not exists t_dbnull (ts timestamp,v int,description nchar(100))";
+                command.ExecuteNonQuery();
+                command.CommandText = "INSERT INTO t_dbnull VALUES (?,?,?)";
+                command.Parameters.AddWithValue(DateTime.Now);
+                command.Parameters.AddWithValue(123);
+                command.Parameters.AddWithValue(DBNull.Value);
+
+                int affectedRows = command.ExecuteNonQuery();
+
+                Assert.Equal(1, affectedRows);
+            }
+        }
+
+		[Fact]
         public void ExecuteNonQuery_WithValidCommand_ReturnsAffectedRows()
         {
             using (var command = new TDengineCommand(_connection))
