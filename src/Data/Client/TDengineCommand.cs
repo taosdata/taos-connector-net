@@ -151,12 +151,12 @@ namespace TDengine.Data.Client
 
         private IRows Statement()
         {
-			if(_stmt == null && _connection != null)
-			{
-				_stmt = _connection.client.StmtInit();
-			}
+            if(_stmt == null && _connection != null)
+            {
+                _stmt = _connection.client.StmtInit();
+            }
 
-			if (!_isPrepared)
+            if (!_isPrepared)
             {
                 _isPrepared = true;
                 _stmt.Prepare(_commandText);
