@@ -234,10 +234,10 @@ jobs:
           sudo dotnet test --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" --results-directory:./testresults
         timeout-minutes: 15
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         with:
-          name: ${{ runner.os }}-${{ matrix.go }}-log
+          name: ${{ runner.os }}-${{ matrix.dotnet }}-log
           path: /var/log/taos/
 
       - name: get coverage files
@@ -248,8 +248,7 @@ jobs:
           echo "files=${COVERAGE_FILES}" >> $GITHUB_OUTPUT
 
       - name: Upload coverage to Codecov
-        if: ${{ matrix.go }} == '6.0.x'
-        uses: codecov/codecov-action@v4-beta
+        uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.get_coverage_files.outputs.files }}
         env:
