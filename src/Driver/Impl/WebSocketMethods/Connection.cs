@@ -43,13 +43,14 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             //p0+24 uint16 version
             //p0+26 uint32 sql_len
             //p0+30 raw sql
-            var req = new byte[30 + sql.Length];
+            var src = Encoding.UTF8.GetBytes(sql);
+            var req = new byte[30 + src.Length];
             WriteUInt64ToBytes(req, reqid, 0);
             WriteUInt64ToBytes(req, 0, 8);
             WriteUInt64ToBytes(req, WSActionBinary.BinaryQueryMessage, 16);
             WriteUInt16ToBytes(req, 1, 24);
-            WriteUInt32ToBytes(req, (uint)sql.Length, 26);
-            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sql), 0, req, 30, sql.Length);
+            WriteUInt32ToBytes(req, (uint)src.Length, 26);
+            Buffer.BlockCopy(src, 0, req, 30, src.Length);
 
             return SendBinaryBackJson<WSQueryResp>(req);
         }
