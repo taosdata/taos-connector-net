@@ -77,7 +77,7 @@ namespace Driver.Test.Client.Query
             }
 
             sql = string.Format(
-                "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','test_varbinary','POINT(100 100)')({12},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
+                "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','中文','POINT(100 100)')({12},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
                 ts,
                 v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
                 nextSecond);
@@ -87,7 +87,7 @@ namespace Driver.Test.Client.Query
                 {
                     TDengineConstant.ConvertTimeToDatetime(ts, precision), v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
                     Encoding.UTF8.GetBytes("test_binary"),
-                    "test_nchar", Encoding.UTF8.GetBytes("test_varbinary"),
+                    "test_nchar", Encoding.UTF8.GetBytes("中文"),
                     new byte[]
                     {
                         0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
