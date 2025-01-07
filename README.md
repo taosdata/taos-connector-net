@@ -23,13 +23,14 @@ Note TDengine no longer supports 32-bit Windows platforms.
 
 ## Version support
 
-| **Connector version** | **TDengine version**                 | **major features**                   |
-|-----------------------|--------------------------------------|--------------------------------------|
-| 3.1.4                 | 3.3.2.0 and above/3.1.2.0 and above  | WebSocket performance improvements   |
-| 3.1.3                 | 3.2.1.0 and above/3.1.1.18 and above | support Websocket reconnect          |
-| 3.1.2                 | 3.2.1.0 and above/3.1.1.18 and above | fix schemaless result release        |
-| 3.1.1                 | 3.2.1.0 and above/3.1.1.18 and above | support varbinary and geometry       |
-| 3.1.0                 | 3.2.1.0 and above/3.1.1.18 and above | WebSocket uses native implementation |
+| **Connector version** | **TDengine version**                 | **major features**                                                   |
+|-----------------------|--------------------------------------|----------------------------------------------------------------------|
+| 3.1.5                 | 3.3.2.0 and above/3.1.2.0 and above  | fix the length calculation error when WebSocket sql contains Chinese |
+| 3.1.4                 | 3.3.2.0 and above/3.1.2.0 and above  | WebSocket performance improvements                                   |
+| 3.1.3                 | 3.2.1.0 and above/3.1.1.18 and above | support Websocket reconnect                                          |
+| 3.1.2                 | 3.2.1.0 and above/3.1.1.18 and above | fix schemaless result release                                        |
+| 3.1.1                 | 3.2.1.0 and above/3.1.1.18 and above | support varbinary and geometry                                       |
+| 3.1.0                 | 3.2.1.0 and above/3.1.1.18 and above | WebSocket uses native implementation                                 |
 
 ## Handling exceptions
 
