@@ -21,18 +21,19 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public void Connect()
         {
+            var reqId = _GetReqId();
             SendJsonBackJson<WSConnReq, WSConnResp>(WSAction.Conn, new WSConnReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 User = _user,
                 Password = _password,
                 Db = _db
-            });
+            },reqId);
         }
 
-        public WSQueryResp BinaryQuery(string sql, ulong reqid = default)
+        public WSQueryResp BinaryQuery(string sql, ulong reqid = 0)
         {
-            if (reqid == default)
+            if (reqid == 0)
             {
                 reqid = _GetReqId();
             }
@@ -52,7 +53,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             WriteUInt32ToBytes(req, (uint)src.Length, 26);
             Buffer.BlockCopy(src, 0, req, 30, src.Length);
 
-            return SendBinaryBackJson<WSQueryResp>(req);
+            return SendBinaryBackJson<WSQueryResp>(req,reqid);
         }
 
         public byte[] FetchRawBlockBinary(ulong resultId)
@@ -62,20 +63,22 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             //p0+16 uint64 action
             //p0+24 uint16 version
             var req = new byte[32];
-            WriteUInt64ToBytes(req, _GetReqId(), 0);
+            var reqId = _GetReqId();
+            WriteUInt64ToBytes(req, reqId, 0);
             WriteUInt64ToBytes(req, resultId, 8);
             WriteUInt64ToBytes(req, WSActionBinary.FetchRawBlockMessage, 16);
             WriteUInt64ToBytes(req, 1, 24);
-            return SendBinaryBackBytes(req);
+            return SendBinaryBackBytes(req,reqId);
         }
 
         public void FreeResult(ulong resultId)
         {
+            var reqId = _GetReqId();
             SendJson(WSAction.FreeResult, new WSFreeResultReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 ResultId = resultId
-            });
+            },reqId);
         }
     }
 }

@@ -66,7 +66,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     WithTableName = options.MsgWithTableName,
                     SessionTimeoutMs = options.SessionTimeoutMs,
                     MaxPollIntervalMs = options.MaxPollIntervalMs
-                });
+                },reqId);
         }
 
         public WSTMQPollResp Poll(long blockingTime)
@@ -80,7 +80,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             {
                 ReqId = reqId,
                 BlockingTime = blockingTime
-            });
+            },reqId);
         }
 
         public byte[] FetchBlock(ulong reqId, ulong messageId)
@@ -89,7 +89,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             {
                 ReqId = reqId,
                 MessageId = messageId
-            });
+            },reqId);
         }
 
         public byte[] FetchRawBlock(ulong messageId)
@@ -103,7 +103,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             {
                 ReqId = reqId,
                 MessageId = messageId
-            });
+            },reqId);
         }
 
         public WSTMQCommitResp Commit()
@@ -116,7 +116,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             return SendJsonBackJson<WSTMQCommitReq, WSTMQCommitResp>(WSTMQAction.TMQCommit, new WSTMQCommitReq
             {
                 ReqId = reqId,
-            });
+            },reqId);
         }
 
         public WSTMQUnsubscribeResp Unsubscribe()
@@ -130,7 +130,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 new WSTMQUnsubscribeReq
                 {
                     ReqId = reqId
-                });
+                },reqId);
         }
 
         public WSTMQGetTopicAssignmentResp Assignment(string topic)
@@ -145,7 +145,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 {
                     ReqId = reqId,
                     Topic = topic
-                });
+                },reqId);
         }
 
         public WSTMQOffsetSeekResp Seek(string topic, int vgroupId, long offset)
@@ -162,7 +162,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     Topic = topic,
                     VGroupId = vgroupId,
                     Offset = offset
-                });
+                },reqId);
         }
 
         public WSTMQCommitOffsetResp CommitOffset(string topic, int vgroupId, long offset)
@@ -179,7 +179,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     Topic = topic,
                     VGroupId = vgroupId,
                     Offset = offset
-                });
+                },reqId);
         }
 
         public WSTMQCommittedResp Committed(List<WSTopicVgroupId> tvIds)
@@ -194,7 +194,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 {
                     ReqId = reqId,
                     TopicVgroupIds = tvIds,
-                });
+                },reqId);
         }
 
         public WSTMQPositionResp Position(List<WSTopicVgroupId> tvIds)
@@ -209,7 +209,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 {
                     ReqId = reqId,
                     TopicVgroupIds = tvIds,
-                });
+                },reqId);
         }
 
         public WSTMQListTopicsResp Subscription()
@@ -223,7 +223,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 new WSTMQListTopicsReq
                 {
                     ReqId = reqId
-                });
+                },reqId);
         }
     }
 
