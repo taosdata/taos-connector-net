@@ -10,6 +10,8 @@ namespace TDengine.Driver.Client.Websocket
         private Connection _connection;
         private readonly TimeZoneInfo _tz;
         private readonly ConnectionStringBuilder _builder;
+        private readonly object _reconnectLock = new object();
+
 
         public WSClient(ConnectionStringBuilder builder)
         {
@@ -66,42 +68,52 @@ namespace TDengine.Driver.Client.Websocket
         {
             if (!_builder.AutoReconnect)
                 return;
-
-            Connection connection = null;
-            for (int i = 0; i < _builder.ReconnectRetryCount; i++)
+            lock (_reconnectLock)
             {
-                try
+                if (_connection != null)
                 {
-                    // sleep
-                    System.Threading.Thread.Sleep(_builder.ReconnectIntervalMs);
-                    connection = new Connection(GetUrl(_builder), _builder.Username, _builder.Password,
-                        _builder.Database, _builder.ConnTimeout, _builder.ReadTimeout, _builder.WriteTimeout,
-                        _builder.EnableCompression);
-                    connection.Connect();
-                    break;
+                    // if manual shutdown, don't reconnect
+                    if (_connection.IsManualShutdown) return;
+                    // connection is available, no need to reconnect
+                    if (_connection.IsAvailable()) return;
                 }
-                catch (Exception)
+                
+                Connection connection = null;
+                for (int i = 0; i < _builder.ReconnectRetryCount; i++)
                 {
-                    if (connection != null)
+                    try
                     {
-                        connection.Close();
-                        connection = null;
+                        // sleep
+                        System.Threading.Thread.Sleep(_builder.ReconnectIntervalMs);
+                        connection = new Connection(GetUrl(_builder), _builder.Username, _builder.Password,
+                            _builder.Database, _builder.ConnTimeout, _builder.ReadTimeout, _builder.WriteTimeout,
+                            _builder.EnableCompression);
+                        connection.Connect();
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        if (connection != null)
+                        {
+                            connection.Close();
+                            connection = null;
+                        }
                     }
                 }
-            }
 
-            if (connection == null)
-            {
-                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
-                    "websocket connection reconnect failed");
-            }
+                if (connection == null)
+                {
+                    throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
+                        "websocket connection reconnect failed");
+                }
 
-            if (_connection != null)
-            {
-                _connection.Close();
-            }
+                if (_connection != null)
+                {
+                    _connection.Close();
+                }
 
-            _connection = connection;
+                _connection = connection;
+            }
         }
 
         public IStmt StmtInit()

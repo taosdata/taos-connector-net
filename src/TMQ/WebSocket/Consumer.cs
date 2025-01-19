@@ -26,6 +26,8 @@ namespace TDengine.TMQ.WebSocket
             { typeof(Dictionary<string, object>), DictionaryDeserializer.Dictionary },
         };
 
+        private readonly object _reconnectLock = new object();
+
         public Consumer(ConsumerBuilder<TValue> builder)
         {
             _options = new TMQOptions(builder.Config);
@@ -75,42 +77,53 @@ namespace TDengine.TMQ.WebSocket
         {
             if (!_reconnect)
                 return;
-            TMQConnection connection = null;
-            for (int i = 0; i < _reconnectRetryCount; i++)
+            lock (_reconnectLock)
             {
-                try
+                if (_connection != null)
                 {
-                    System.Threading.Thread.Sleep(_reconnectRetryIntervalMs);
-                    connection = new TMQConnection(_options);
-                    if (_topics != null)
-                    {
-                        connection.Subscribe(_topics, _options);
-                    }
-
-                    break;
+                    // if manual shutdown, don't reconnect
+                    if (_connection.IsManualShutdown) return;
+                    // connection is available, no need to reconnect
+                    if (_connection.IsAvailable()) return;
                 }
-                catch (Exception)
+
+                TMQConnection connection = null;
+                for (int i = 0; i < _reconnectRetryCount; i++)
                 {
-                    if (connection != null)
+                    try
                     {
-                        connection.Close();
-                        connection = null;
+                        System.Threading.Thread.Sleep(_reconnectRetryIntervalMs);
+                        connection = new TMQConnection(_options);
+                        if (_topics != null)
+                        {
+                            connection.Subscribe(_topics, _options);
+                        }
+
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        if (connection != null)
+                        {
+                            connection.Close();
+                            connection = null;
+                        }
                     }
                 }
-            }
 
-            if (connection == null)
-            {
-                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
-                    "websocket connection reconnect failed");
-            }
+                if (connection == null)
+                {
+                    throw new TDengineError((int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED,
+                        "websocket connection reconnect failed");
+                }
 
-            if (_connection != null)
-            {
-                _connection.Close();
-            }
+                if (_connection != null)
+                {
+                    _connection.Close();
+                }
 
-            _connection = connection;
+                _connection = connection;
+            }
         }
 
         public ConsumeResult<TValue> Consume(int millisecondsTimeout)
