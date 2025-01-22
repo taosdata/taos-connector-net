@@ -2,7 +2,7 @@
 
 | Github Action Tests                                                                          | CodeCov                                                                                                                                                   |
 |----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ![actions](https://github.com/taosdata/taos-connector/actions/workflows/linux.yml/badge.svg) | [![codecov](https://codecov.io/gh/taosdata/taos-connector-dotnet/graph/badge.svg?token=U30JZYDGMS)](https://codecov.io/gh/taosdata/taos-connector-dotnet) |
+| ![actions](https://github.com/taosdata/taos-connector-dotnet/actions/workflows/linux.yml/badge.svg) | [![codecov](https://codecov.io/gh/taosdata/taos-connector-dotnet/graph/badge.svg?token=U30JZYDGMS)](https://codecov.io/gh/taosdata/taos-connector-dotnet) |
 
 [English](README.md) | 简体中文
 
