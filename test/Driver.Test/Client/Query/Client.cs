@@ -669,5 +669,73 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(data[i].Length));
             }
         }
+
+        private void QueryConcurrencyTest(string connectString, string db)
+        {
+            var precision = TDenginePrecision.TSDB_TIME_PRECISION_MILLI;
+            var builder = new ConnectionStringBuilder(connectString);
+            var client = DbDriver.Open(builder);
+            try
+            {
+                client.Exec($"drop database if exists {db}");
+                client.Exec($"create database {db} precision '{PrecisionString(precision)}'");
+                client.Exec($"use {db}");
+                client.Exec("create table t1 (ts timestamp, a int, b float, c binary(10))");
+                var ts = new long[10];
+                var dateTime = DateTime.Now;
+                var tsv = new DateTime[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    ts[i] = (dateTime.Add(TimeSpan.FromSeconds(i)).ToUniversalTime().Ticks -
+                             TDengineConstant.TimeZero.Ticks) / 10000;
+                    tsv[i] = TDengineConstant.ConvertTimeToDatetime(ts[i], precision);
+                }
+
+                var valuesStr = "";
+                for (int i = 0; i < 10; i++)
+                {
+                    valuesStr += $"({ts[i]}, {i}, {i}, '中文')";
+                }
+
+                client.Exec($"insert into t1 values {valuesStr}");
+                var tasks = new System.Collections.Generic.List<System.Threading.Tasks.Task>();
+                for (var i = 0; i < 10; i++)
+                {
+                    int localI = i;
+                    string query = "select * from t1 where ts = " + ts[localI];
+                    tasks.Add(System.Threading.Tasks.Task.Run(() =>
+                    {
+                        using (var rows = client.Query(query))
+                        {
+                            Assert.Equal(1, rows.GetOrdinal("a"));
+                            var fieldCount = rows.FieldCount;
+                            Assert.Equal(4, fieldCount);
+                            Assert.Equal("ts", rows.GetName(0));
+                            Assert.Equal("a", rows.GetName(1));
+                            Assert.Equal("b", rows.GetName(2));
+                            Assert.Equal("c", rows.GetName(3));
+                            var haveNext = rows.Read();
+                            Assert.True(haveNext);
+                            Assert.Equal(tsv[localI], rows.GetValue(0));
+                            Assert.Equal(localI, rows.GetValue(1));
+                            Assert.Equal((float)localI, rows.GetValue(2));
+                            Assert.Equal(Encoding.UTF8.GetBytes("中文"), rows.GetValue(3));
+                        }
+                    }));
+                }
+
+                System.Threading.Tasks.Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine(e.ToString());
+                throw;
+            }
+            finally
+            {
+                client.Exec($"drop database if exists {db}");
+                client.Dispose();
+            }
+        }
     }
 }

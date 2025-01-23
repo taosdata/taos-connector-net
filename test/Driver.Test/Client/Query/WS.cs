@@ -137,5 +137,12 @@ namespace Driver.Test.Client.Query
             var db = "ws_sml_json_test";
             this.SMLJsonTest(this._wsConnectString, db);
         }
+
+        [Fact]
+        public void WebSocketQueryConcurrencyTest()
+        {
+            var db = "ws_query_concurrency_test";
+            this.QueryConcurrencyTest(this._wsConnectString, db);
+        }
     }
 }
