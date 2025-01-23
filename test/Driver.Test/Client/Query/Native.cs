@@ -137,5 +137,12 @@ namespace Driver.Test.Client.Query
             var db = "sml_json_test";
             this.SMLJsonTest(this._nativeConnectString, db);
         }
+
+        [Fact]
+        public void NativeQueryConcurrencyTest()
+        {
+            var db = "query_concurrency_test";
+            this.QueryConcurrencyTest(this._nativeConnectString, db);
+        }
     }
 }
