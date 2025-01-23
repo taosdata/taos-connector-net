@@ -8,6 +8,18 @@ English | [简体中文](README-CN.md)
 
 `TDengine.Connector` is the C# language connector provided by TDengine. C# developers can use it to develop C# application software that accesses TDengine cluster data.
 
+`TDengine.Connector` provides two connection methods:
+
+- Native Connection: Establishes a connection directly with the server program taosd through the client driver taosc.
+  This method requires the client driver taosc and the server taosd to be of the same version.
+- WebSocket Connection: Establishes a connection with taosd through the WebSocket API provided by the taosAdapter
+  component, without relying on the TDengine client driver.
+
+## Supported Platforms
+
+- Native Connection: Supported platforms are consistent with those supported by the TDengine client driver.
+- WebSocket Connection: Supports all platforms that can run the .NET runtime.
+
 # Get the Driver
 
 Nuget package `TDengine.Connector` can be added to the current project through dotnet CLI under the path of the current .NET project.
