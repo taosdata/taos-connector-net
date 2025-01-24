@@ -11,27 +11,29 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             return SendJsonBackJson<WSStmtInitReq, WSStmtInitResp>(WSAction.STMTInit, new WSStmtInitReq
             {
                 ReqId = reqId,
-            });
+            },reqId);
         }
 
         public WSStmtPrepareResp StmtPrepare(ulong stmtId,string sql)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtPrepareReq, WSStmtPrepareResp>(WSAction.STMTPrepare, new WSStmtPrepareReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 StmtId = stmtId,
                 SQL = sql
-            });
+            },reqId);
         }
         
         public WSStmtSetTableNameResp StmtSetTableName(ulong stmtId,string tablename)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtSetTableNameReq, WSStmtSetTableNameResp>(WSAction.STMTSetTableName, new WSStmtSetTableNameReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 StmtId = stmtId,
                 Name = tablename,
-            });
+            },reqId);
         }
 
         public WSStmtSetTagsResp StmtSetTags(ulong stmtId,TaosFieldE[] fields, object[] tags)
@@ -45,7 +47,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             {
                 if (tags[i] == null)
                 {
-                    var a = new object[1]{123};
                     Array newArray = Array.CreateInstance(TDengineConstant.ScanNullableType(fields[i].type), 1);
                     newArray.SetValue(null, 0);
                     param[i] = newArray;
@@ -60,11 +61,12 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             var bytes = BlockWriter.Serialize(1, fields, param);
             var req = new byte[24 +bytes.Length];
-            WriteUInt64ToBytes(req, _GetReqId(),0);
+            var reqId = _GetReqId();
+            WriteUInt64ToBytes(req, reqId,0);
             WriteUInt64ToBytes(req,stmtId,8);
             WriteUInt64ToBytes(req,WSActionBinary.SetTagsMessage,16);
             Buffer.BlockCopy(bytes, 0, req, 24, bytes.Length);
-            return SendBinaryBackJson<WSStmtSetTagsResp>(req);
+            return SendBinaryBackJson<WSStmtSetTagsResp>(req,reqId);
         }
         
         public WSStmtBindResp StmtBind(ulong stmtId,TaosFieldE[] fields, object[] row)
@@ -92,11 +94,12 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             var bytes = BlockWriter.Serialize(1, fields, param);
             var req = new byte[24 +bytes.Length];
-            WriteUInt64ToBytes(req, _GetReqId(),0);
+            var reqId = _GetReqId();
+            WriteUInt64ToBytes(req, reqId,0);
             WriteUInt64ToBytes(req,stmtId,8);
             WriteUInt64ToBytes(req,WSActionBinary.BindMessage,16);
             Buffer.BlockCopy(bytes, 0, req, 24, bytes.Length);
-            return SendBinaryBackJson<WSStmtBindResp>(req);
+            return SendBinaryBackJson<WSStmtBindResp>(req,reqId);
         }
         public WSStmtBindResp StmtBind(ulong stmtId,TaosFieldE[] fields, params Array[] param)
         {
@@ -107,64 +110,71 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             var bytes = BlockWriter.Serialize(param[0].Length, fields, param);
             var req = new byte[24 +bytes.Length];
-            WriteUInt64ToBytes(req, _GetReqId(),0);
+            var reqId = _GetReqId();
+            WriteUInt64ToBytes(req, reqId,0);
             WriteUInt64ToBytes(req,stmtId,8);
             WriteUInt64ToBytes(req,WSActionBinary.BindMessage,16);
             Buffer.BlockCopy(bytes, 0, req, 24, bytes.Length);
-            return SendBinaryBackJson<WSStmtBindResp>(req);
+            return SendBinaryBackJson<WSStmtBindResp>(req,reqId);
         }
 
         public WSStmtAddBatchResp StmtAddBatch(ulong stmtId)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtAddBatchReq, WSStmtAddBatchResp>(WSAction.STMTAddBatch, new WSStmtAddBatchReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 StmtId = stmtId
-            });
+            },reqId);
         }
         
         public WSStmtExecResp StmtExec(ulong stmtId)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtExecReq, WSStmtExecResp>(WSAction.STMTExec, new WSStmtExecReq
             {
-                ReqId = _GetReqId(),
+                ReqId =reqId,
                 StmtId = stmtId
-            });
+            },reqId);
         }
 
         public WSStmtGetColFieldsResp StmtGetColFields(ulong stmtId)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtGetColFieldsReq, WSStmtGetColFieldsResp>(WSAction.STMTGetColFields, new WSStmtGetColFieldsReq
             {
-                ReqId = _GetReqId(),
+                ReqId =reqId ,
                 StmtId = stmtId
-            });
+            },reqId);
         }
         public WSStmtGetTagFieldsResp StmtGetTagFields(ulong stmtId)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtGetTagFieldsReq, WSStmtGetTagFieldsResp>(WSAction.STMTGetTagFields, new WSStmtGetTagFieldsReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 StmtId = stmtId
-            });
+            },reqId);
         }
 
         public WSStmtUseResultResp StmtUseResult(ulong stmtId)
         {
+            var reqId = _GetReqId();
             return SendJsonBackJson<WSStmtUseResultReq, WSStmtUseResultResp>(WSAction.STMTUseResult,
                 new WSStmtUseResultReq
                 {
-                    ReqId = _GetReqId(),
+                    ReqId = reqId,
                     StmtId = stmtId
-                });
+                },reqId);
         }
         public void StmtClose(ulong stmtId)
         {
+            var reqId = _GetReqId();
             SendJson(WSAction.STMTClose, new WSStmtCloseReq
             {
-                ReqId = _GetReqId(),
+                ReqId = reqId,
                 StmtId = stmtId
-            });
+            },reqId);
         }
         
     }
