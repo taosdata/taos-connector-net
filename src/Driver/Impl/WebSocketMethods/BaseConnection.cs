@@ -135,6 +135,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNEC_FAILED,
                     $"connect to {addr} fail");
             }
+
             Task.Run(async () => { await ReceiveLoop(); });
         }
 
@@ -182,7 +183,16 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             var tcs = AddTask(reqId);
             // send request
-            await AsyncSendBinary(request);
+            try
+            {
+                await AsyncSendBinary(request);
+            }
+            catch (Exception)
+            {
+                _pendingRequests.TryRemove(reqId, out _);
+                throw;
+            }
+
             // wait for timeout
             var timeoutTask = Task.Delay(_readTimeout);
             // wait for response
@@ -193,8 +203,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (_pendingRequests.TryRemove(reqId, out var removedTcs))
                 {
                     removedTcs.TrySetCanceled();
-                    throw new TimeoutException("Request timed out. reqId:" + reqId);
                 }
+
+                throw new TimeoutException("Request timed out. reqId:" + reqId);
             }
 
             // get response
@@ -211,7 +222,17 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 return respBytes;
             }
 
-            var resp = JsonConvert.DeserializeObject<WSBaseResp>(Encoding.UTF8.GetString(respBytes));
+            WSBaseResp resp;
+            try
+            {
+                resp = JsonConvert.DeserializeObject<WSBaseResp>(Encoding.UTF8.GetString(respBytes));
+            }
+            catch (Exception e)
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    "receive unexpected message", e.Message);
+            }
+
             throw new TDengineError(resp.Code, resp.Message, request, Encoding.UTF8.GetString(respBytes));
         }
 
@@ -227,7 +248,16 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             var tcs = AddTask(reqId);
             // send request
-            await AsyncSendBinary(request);
+            try
+            {
+                await AsyncSendBinary(request);
+            }
+            catch (Exception)
+            {
+                _pendingRequests.TryRemove(reqId, out _);
+                throw;
+            }
+
             // wait for timeout
             var timeoutTask = Task.Delay(_readTimeout);
             // wait for response
@@ -238,8 +268,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (_pendingRequests.TryRemove(reqId, out var removedTcs))
                 {
                     removedTcs.TrySetCanceled();
-                    throw new TimeoutException("Request timed out.");
                 }
+
+                throw new TimeoutException("Request timed out.");
             }
 
             // get response
@@ -273,7 +304,17 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             var tcs = AddTask(reqId);
             // send request
-            var reqStr = await AsyncSendJson(action, req);
+            string reqStr;
+            try
+            {
+                reqStr = await AsyncSendJson(action, req);
+            }
+            catch (Exception)
+            {
+                _pendingRequests.TryRemove(reqId, out _);
+                throw;
+            }
+
             // wait for timeout
             var timeoutTask = Task.Delay(_readTimeout);
             // wait for response
@@ -284,8 +325,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (_pendingRequests.TryRemove(reqId, out var removedTcs))
                 {
                     removedTcs.TrySetCanceled();
-                    throw new TimeoutException("Request timed out.");
                 }
+
+                throw new TimeoutException("Request timed out.");
             }
 
             // get response
@@ -303,7 +345,17 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     "receive unexpected binary message", respBytes, reqStr);
             }
 
-            var resp = JsonConvert.DeserializeObject<T2>(Encoding.UTF8.GetString(respBytes));
+            T2 resp;
+            try
+            {
+                resp = JsonConvert.DeserializeObject<T2>(Encoding.UTF8.GetString(respBytes));
+            }
+            catch (Exception e)
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    "receive unexpected message", "req:" + reqStr + ";resp:" + Encoding.UTF8.GetString(respBytes));
+            }
+
             if (resp.Action != action)
             {
                 throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
@@ -327,7 +379,17 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             var tcs = AddTask(reqId);
             // send request
-            var reqStr = await AsyncSendJson(action, req);
+            string reqStr;
+            try
+            {
+                reqStr = await AsyncSendJson(action, req);
+            }
+            catch (Exception)
+            {
+                _pendingRequests.TryRemove(reqId, out _);
+                throw;
+            }
+
             // wait for timeout
             var timeoutTask = Task.Delay(_readTimeout);
             // wait for response
@@ -338,8 +400,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (_pendingRequests.TryRemove(reqId, out var removedTcs))
                 {
                     removedTcs.TrySetCanceled();
-                    throw new TimeoutException("Request timed out.");
                 }
+
+                throw new TimeoutException("Request timed out.");
             }
 
             // get response
@@ -356,8 +419,18 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 return respBytes;
             }
 
-            var resp = JsonConvert.DeserializeObject<WSBaseResp>(Encoding.UTF8.GetString(respBytes));
-            throw new TDengineError(resp.Code, resp.Message, reqStr);
+            WSBaseResp resp;
+            try
+            {
+                resp = JsonConvert.DeserializeObject<WSBaseResp>(Encoding.UTF8.GetString(respBytes));
+            }
+            catch (Exception)
+            {
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE,
+                    "receive unexpected message", "req:" + reqStr + ";resp:" + Encoding.UTF8.GetString(respBytes));
+            }
+
+            throw new TDengineError(resp.Code, resp.Message, Encoding.UTF8.GetString(respBytes));
         }
 
         protected string SendJson<T>(string action, T req, ulong reqId)
