@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/taosdata/taos-connector-dotnet/graph/badge.svg?token=U30JZYDGMS)](https://codecov.io/gh/taosdata/taos-connector-dotnet)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/taosdata/taos-connector-dotnet)
 ![GitHub License](https://img.shields.io/github/license/taosdata/taos-connector-dotnet)
-![NuGet Version](https://img.shields.io/nuget/v/TDengine.Connector)
+[![NuGet Version](https://img.shields.io/nuget/v/TDengine.Connector)](https://www.nuget.org/packages/TDengine.Connector)
 <br />
 [![Twitter Follow](https://img.shields.io/twitter/follow/tdenginedb?label=TDengine&style=social)](https://twitter.com/tdenginedb)
 [![YouTube Channel](https://img.shields.io/badge/Subscribe_@tdengine--white?logo=youtube&style=social)](https://www.youtube.com/@tdengine)
@@ -53,8 +53,9 @@ English | [简体中文](README-CN.md)
 
 - Install [.NET SDK](https://dotnet.microsoft.com/download)
 - [Nuget Client](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) (optional installation)
-- Install the TDengine client driver. For specific steps, please refer
-  to [Installing the client driver](https://docs.tdengine.com/develop/connect/#install-client-driver-taosc)
+- TDengine has been deployed locally. For specific steps, please refer
+  to [Deploy TDengine](https://docs.tdengine.com/get-started/deploy-from-package/). Please make sure taosd and
+  taosAdapter have been started.
 
 ## 4. Build
 

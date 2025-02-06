@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/taosdata/taos-connector-dotnet/graph/badge.svg?token=U30JZYDGMS)](https://codecov.io/gh/taosdata/taos-connector-dotnet)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/taosdata/taos-connector-dotnet)
 ![GitHub License](https://img.shields.io/github/license/taosdata/taos-connector-dotnet)
-![NuGet Version](https://img.shields.io/nuget/v/TDengine.Connector)
+[![NuGet Version](https://img.shields.io/nuget/v/TDengine.Connector)](https://www.nuget.org/packages/TDengine.Connector)
 <br />
 [![Twitter Follow](https://img.shields.io/twitter/follow/tdenginedb?label=TDengine&style=social)](https://twitter.com/tdenginedb)
 [![YouTube Channel](https://img.shields.io/badge/Subscribe_@tdengine--white?logo=youtube&style=social)](https://www.youtube.com/@tdengine)
@@ -48,7 +48,7 @@
 
 - 安装 [.NET SDK](https://dotnet.microsoft.com/download)
 - [Nuget 客户端](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) （可选安装）
-- 安装 TDengine 客户端驱动，具体步骤请参考 [安装客户端驱动](https://docs.taosdata.com/develop/connect/#%E5%AE%89%E8%A3%85%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%A9%B1%E5%8A%A8-taosc)
+- 本地已经部署 TDengine，具体步骤请参考 [部署服务端](https://docs.taosdata.com/get-started/package/)，且已经启动 taosd 与 taosAdapter。
 
 ## 4. 构建
 
