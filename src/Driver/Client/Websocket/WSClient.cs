@@ -72,12 +72,10 @@ namespace TDengine.Driver.Client.Websocket
             {
                 if (_connection != null)
                 {
-                    // if manual shutdown, don't reconnect
-                    if (_connection.IsManualShutdown) return;
                     // connection is available, no need to reconnect
                     if (_connection.IsAvailable()) return;
                 }
-                
+
                 Connection connection = null;
                 for (int i = 0; i < _builder.ReconnectRetryCount; i++)
                 {

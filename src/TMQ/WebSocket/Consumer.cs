@@ -81,8 +81,6 @@ namespace TDengine.TMQ.WebSocket
             {
                 if (_connection != null)
                 {
-                    // if manual shutdown, don't reconnect
-                    if (_connection.IsManualShutdown) return;
                     // connection is available, no need to reconnect
                     if (_connection.IsAvailable()) return;
                 }
