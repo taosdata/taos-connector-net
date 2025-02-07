@@ -109,7 +109,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     $"connect to {addr} fail");
             }
 
-            Task.Run(async () => { await ReceiveLoop(); });
+            Task.Run(async () => { await ReceiveLoop().ConfigureAwait(false); });
         }
 
         protected static ulong _GetReqId()
@@ -147,7 +147,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         protected byte[] SendBinaryBackBytes(byte[] request, ulong reqId)
         {
-            var task = Task.Run(async () => await AsyncSendBinaryBackByte(request, reqId));
+            var task = Task.Run(async () => await AsyncSendBinaryBackByte(request, reqId).ConfigureAwait(false));
             task.Wait();
             return task.Result;
         }
@@ -166,19 +166,24 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 throw;
             }
 
-            // wait for timeout
-            var timeoutTask = Task.Delay(_readTimeout);
-            // wait for response
-            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            // timeout
-            if (completedTask == timeoutTask)
+            using (var cts = new CancellationTokenSource())
             {
-                if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                // wait for timeout
+                var timeoutTask = Task.Delay(_readTimeout, cts.Token);
+                // wait for response
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                // timeout
+                if (completedTask == timeoutTask)
                 {
-                    removedTcs.TrySetCanceled();
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                    {
+                        removedTcs.TrySetCanceled();
+                    }
+
+                    throw new TimeoutException("Request timed out. reqId:" + reqId);
                 }
 
-                throw new TimeoutException("Request timed out. reqId:" + reqId);
+                cts.Cancel();
             }
 
             // get response
@@ -212,7 +217,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         protected T SendBinaryBackJson<T>(byte[] request, ulong reqId) where T : IWSBaseResp
         {
-            var task = Task.Run(async () => await AsyncSendBinaryBackJson<T>(request, reqId));
+            var task = Task.Run(async () => await AsyncSendBinaryBackJson<T>(request, reqId).ConfigureAwait(false));
             task.Wait();
             return task.Result;
         }
@@ -231,19 +236,24 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 throw;
             }
 
-            // wait for timeout
-            var timeoutTask = Task.Delay(_readTimeout);
-            // wait for response
-            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            // timeout
-            if (completedTask == timeoutTask)
+            using (var cts = new CancellationTokenSource())
             {
-                if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                // wait for timeout
+                var timeoutTask = Task.Delay(_readTimeout, cts.Token);
+                // wait for response
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                // timeout
+                if (completedTask == timeoutTask)
                 {
-                    removedTcs.TrySetCanceled();
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                    {
+                        removedTcs.TrySetCanceled();
+                    }
+
+                    throw new TimeoutException("Request timed out.");
                 }
 
-                throw new TimeoutException("Request timed out.");
+                cts.Cancel();
             }
 
             // get response
@@ -268,7 +278,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         protected T2 SendJsonBackJson<T1, T2>(string action, T1 req, ulong reqId) where T2 : IWSBaseResp
         {
-            var task = Task.Run(async () => await AsyncSendJsonBackJson<T1, T2>(action, req, reqId));
+            var task = Task.Run(async () =>
+                await AsyncSendJsonBackJson<T1, T2>(action, req, reqId).ConfigureAwait(false));
             task.Wait();
             return task.Result;
         }
@@ -280,7 +291,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             string reqStr;
             try
             {
-                reqStr = await AsyncSendJson(action, req);
+                reqStr = await AsyncSendJson(action, req).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -288,19 +299,24 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 throw;
             }
 
-            // wait for timeout
-            var timeoutTask = Task.Delay(_readTimeout);
-            // wait for response
-            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            // timeout
-            if (completedTask == timeoutTask)
+            using (var cts = new CancellationTokenSource())
             {
-                if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                // wait for timeout
+                var timeoutTask = Task.Delay(_readTimeout, cts.Token);
+                // wait for response
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                // timeout
+                if (completedTask == timeoutTask)
                 {
-                    removedTcs.TrySetCanceled();
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                    {
+                        removedTcs.TrySetCanceled();
+                    }
+
+                    throw new TimeoutException("Request timed out.");
                 }
 
-                throw new TimeoutException("Request timed out.");
+                cts.Cancel();
             }
 
             // get response
@@ -344,7 +360,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         protected byte[] SendJsonBackBytes<T>(string action, T req, ulong reqId)
         {
-            var task = Task.Run(async () => await AsyncSendJsonBackBytes(action, req, reqId));
+            var task = Task.Run(async () => await AsyncSendJsonBackBytes(action, req, reqId).ConfigureAwait(false));
             task.Wait();
             return task.Result;
         }
@@ -364,19 +380,24 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 throw;
             }
 
-            // wait for timeout
-            var timeoutTask = Task.Delay(_readTimeout);
-            // wait for response
-            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            // timeout
-            if (completedTask == timeoutTask)
+            using (var cts = new CancellationTokenSource())
             {
-                if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                // wait for timeout
+                var timeoutTask = Task.Delay(_readTimeout, cts.Token);
+                // wait for response
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                // timeout
+                if (completedTask == timeoutTask)
                 {
-                    removedTcs.TrySetCanceled();
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
+                    {
+                        removedTcs.TrySetCanceled();
+                    }
+
+                    throw new TimeoutException("Request timed out.");
                 }
 
-                throw new TimeoutException("Request timed out.");
+                cts.Cancel();
             }
 
             // get response
@@ -409,7 +430,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         protected string SendJson<T>(string action, T req, ulong reqId)
         {
-            var task = Task.Run(async () => await AsyncSendJson(action, req));
+            var task = Task.Run(async () => await AsyncSendJson(action, req).ConfigureAwait(false));
             task.Wait();
             return task.Result;
         }
@@ -506,7 +527,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             Exception exception = null;
             try
             {
-                var buffer = new byte[1024 * 4];
+                var buffer = new byte[1024 * 8];
                 while (_client.State == WebSocketState.Open)
                 {
                     WebSocketReceiveResult result;
