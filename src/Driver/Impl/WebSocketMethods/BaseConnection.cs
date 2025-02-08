@@ -44,8 +44,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private bool _exit = false;
         private readonly ReaderWriterLockSlim _exitLock = new ReaderWriterLockSlim();
 
-        private int _isShutdown = 0;
-
         private bool IsExit
         {
             get
@@ -175,12 +173,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 // timeout
                 if (completedTask == timeoutTask)
                 {
-                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
-                    {
-                        removedTcs.TrySetCanceled();
-                    }
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
 
-                    throw new TimeoutException("Request timed out. reqId:" + reqId);
+                    throw new TimeoutException($"Request timed out. reqId: {reqId}");
                 }
 
                 cts.Cancel();
@@ -188,10 +183,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             // get response
             var responseMessage = await tcs.Task.ConfigureAwait(false);
-            if (responseMessage.Exception != null)
-            {
-                throw responseMessage.Exception;
-            }
+            if (responseMessage.Exception != null) throw responseMessage.Exception;
 
             var respBytes = responseMessage.Message;
             var messageType = responseMessage.MessageType;
@@ -245,12 +237,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 // timeout
                 if (completedTask == timeoutTask)
                 {
-                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
-                    {
-                        removedTcs.TrySetCanceled();
-                    }
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
 
-                    throw new TimeoutException("Request timed out.");
+                    throw new TimeoutException($"Request timed out. reqId: {reqId}");
                 }
 
                 cts.Cancel();
@@ -308,12 +297,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 // timeout
                 if (completedTask == timeoutTask)
                 {
-                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
-                    {
-                        removedTcs.TrySetCanceled();
-                    }
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
 
-                    throw new TimeoutException("Request timed out.");
+                    throw new TimeoutException($"Request timed out. reqId: {reqId}");
                 }
 
                 cts.Cancel();
@@ -389,12 +375,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 // timeout
                 if (completedTask == timeoutTask)
                 {
-                    if (_pendingRequests.TryRemove(reqId, out var removedTcs))
-                    {
-                        removedTcs.TrySetCanceled();
-                    }
+                    if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
 
-                    throw new TimeoutException("Request timed out.");
+                    throw new TimeoutException($"Request timed out. reqId: {reqId}");
                 }
 
                 cts.Cancel();
@@ -559,6 +542,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
                                 var flag = BitConverter.ToUInt64(bs, 0);
                                 var reqId = BitConverter.ToUInt64(bs, 8);
+                                // new query response
                                 if (flag == 0xffffffffffffffff)
                                 {
                                     reqId = BitConverter.ToUInt64(bs, 26);
@@ -609,10 +593,10 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         private void DoClose(Exception e = null)
         {
-            if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) != 0) return;
             _exitLock.EnterWriteLock();
             try
             {
+                if (_exit) return;
                 _exit = true;
                 foreach (var kvp in _pendingRequests)
                 {
@@ -638,7 +622,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 Task.Run(() =>
                     _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
                         .ConfigureAwait(false)).Wait();
-                // _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
             }
             catch (Exception)
             {
@@ -664,11 +647,21 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 case WebSocketException _:
                     return false;
                 case AggregateException ae:
-                    return !(ae.InnerException is WebSocketException);
+                    if (ae.InnerException is WebSocketException) return false;
+                    if (ae.InnerException is TDengineError tInnerException)
+                    {
+                        return tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
+                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
+                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
+                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE;
+                    }
+
+                    return true;
                 case TDengineError te:
                     return te.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
                            te.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
-                           te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT;
+                           te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
+                           te.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE;
                 default:
                     return true;
             }

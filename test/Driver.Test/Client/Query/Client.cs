@@ -675,16 +675,17 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             var precision = TDenginePrecision.TSDB_TIME_PRECISION_MILLI;
             var builder = new ConnectionStringBuilder(connectString);
             var client = DbDriver.Open(builder);
+            var count = 30;
             try
             {
                 client.Exec($"drop database if exists {db}");
                 client.Exec($"create database {db} precision '{PrecisionString(precision)}'");
                 client.Exec($"use {db}");
                 client.Exec("create table t1 (ts timestamp, a int, b float, c binary(10))");
-                var ts = new long[10];
+                var ts = new long[count];
                 var dateTime = DateTime.Now;
-                var tsv = new DateTime[10];
-                for (int i = 0; i < 10; i++)
+                var tsv = new DateTime[count];
+                for (int i = 0; i < count; i++)
                 {
                     ts[i] = (dateTime.Add(TimeSpan.FromSeconds(i)).ToUniversalTime().Ticks -
                              TDengineConstant.TimeZero.Ticks) / 10000;
@@ -692,14 +693,14 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
 
                 var valuesStr = "";
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < count; i++)
                 {
                     valuesStr += $"({ts[i]}, {i}, {i}, '中文')";
                 }
 
                 client.Exec($"insert into t1 values {valuesStr}");
                 var tasks = new System.Collections.Generic.List<System.Threading.Tasks.Task>();
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < count; i++)
                 {
                     int localI = i;
                     string query = "select * from t1 where ts = " + ts[localI];
