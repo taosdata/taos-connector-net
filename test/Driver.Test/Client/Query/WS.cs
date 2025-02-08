@@ -230,5 +230,30 @@ namespace Driver.Test.Client.Query
                 client.Dispose();
             }
         }
+
+        [Fact]
+        public void WebSocketTimeoutTest()
+        {
+            var builder = new ConnectionStringBuilder(_wsConnectString);
+            builder.ReadTimeout = TimeSpan.FromTicks(100);
+            var timeout = false;
+            try
+            {
+                var client = DbDriver.Open(builder);
+            }
+            catch (TimeoutException e)
+            {
+                timeout = true;
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine(e.ToString());
+                throw;
+            }
+            finally
+            {
+                Assert.True(timeout);
+            }
+        }
     }
 }
