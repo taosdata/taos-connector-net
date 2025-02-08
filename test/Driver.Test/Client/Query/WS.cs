@@ -208,13 +208,10 @@ namespace Driver.Test.Client.Query
                                 Assert.Equal(Encoding.UTF8.GetBytes("中文"), rows.GetValue(3));
                             }
                         }
-                        catch (AggregateException e)
+                        catch (InvalidOperationException e)
                         {
-                            if (e.InnerException != null)
-                            {
-                                Assert.Equal($"Request with reqId '{reqid}' already exists.", e.InnerException.Message);
-                                haveException = true;
-                            }
+                            Assert.Equal($"Request with reqId '{reqid}' already exists.", e.Message);
+                            haveException = true;
                         }
                     }));
                 }

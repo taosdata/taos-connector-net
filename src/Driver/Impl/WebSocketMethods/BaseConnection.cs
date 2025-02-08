@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -146,8 +147,21 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         protected byte[] SendBinaryBackBytes(byte[] request, ulong reqId)
         {
             var task = Task.Run(async () => await AsyncSendBinaryBackByte(request, reqId).ConfigureAwait(false));
-            task.Wait();
+            WaitAndThrowOriginalException(task);
             return task.Result;
+        }
+
+        private static void WaitAndThrowOriginalException(Task task)
+        {
+            try
+            {
+                task.Wait();
+            }
+            catch (AggregateException ex)
+            {
+                var firstException = ex.Flatten().InnerExceptions.First();
+                throw firstException;
+            }
         }
 
         private async Task<byte[]> AsyncSendBinaryBackByte(byte[] request, ulong reqId)
@@ -210,7 +224,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         protected T SendBinaryBackJson<T>(byte[] request, ulong reqId) where T : IWSBaseResp
         {
             var task = Task.Run(async () => await AsyncSendBinaryBackJson<T>(request, reqId).ConfigureAwait(false));
-            task.Wait();
+            WaitAndThrowOriginalException(task);
             return task.Result;
         }
 
@@ -269,7 +283,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             var task = Task.Run(async () =>
                 await AsyncSendJsonBackJson<T1, T2>(action, req, reqId).ConfigureAwait(false));
-            task.Wait();
+            WaitAndThrowOriginalException(task);
             return task.Result;
         }
 
@@ -347,7 +361,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         protected byte[] SendJsonBackBytes<T>(string action, T req, ulong reqId)
         {
             var task = Task.Run(async () => await AsyncSendJsonBackBytes(action, req, reqId).ConfigureAwait(false));
-            task.Wait();
+            WaitAndThrowOriginalException(task);
             return task.Result;
         }
 
@@ -414,7 +428,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         protected string SendJson<T>(string action, T req, ulong reqId)
         {
             var task = Task.Run(async () => await AsyncSendJson(action, req).ConfigureAwait(false));
-            task.Wait();
+            WaitAndThrowOriginalException(task);
             return task.Result;
         }
 
@@ -650,21 +664,23 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     if (ae.InnerException is WebSocketException) return false;
                     if (ae.InnerException is TDengineError tInnerException)
                     {
-                        return tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
-                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
-                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
-                               tInnerException.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE;
+                        return TDengineErrorIsConnectionAvailable(tInnerException);
                     }
 
                     return true;
                 case TDengineError te:
-                    return te.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
-                           te.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
-                           te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
-                           te.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE;
+                    return TDengineErrorIsConnectionAvailable(te);
                 default:
                     return true;
             }
+        }
+
+        private bool TDengineErrorIsConnectionAvailable(TDengineError te)
+        {
+            return te.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
+                   te.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
+                   te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
+                   te.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE;
         }
     }
 }
