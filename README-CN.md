@@ -46,8 +46,8 @@
 
 ## 3. 前置条件
 
-- 安装 [.NET SDK](https://dotnet.microsoft.com/download)
-- [Nuget 客户端](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) （可选安装）
+- 安装 [.NET SDK 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+- [Nuget 客户端](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools)
 - 本地已经部署 TDengine，具体步骤请参考 [部署服务端](https://docs.taosdata.com/get-started/package/)，且已经启动 taosd 与 taosAdapter。
 
 ## 4. 构建
