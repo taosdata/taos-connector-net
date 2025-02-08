@@ -51,8 +51,8 @@ English | [简体中文](README-CN.md)
 
 ## 3. Prerequisites
 
-- Install [.NET SDK](https://dotnet.microsoft.com/download)
-- [Nuget Client](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) (optional installation)
+- Install [.NET SDK 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+- [Nuget Client](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools)
 - TDengine has been deployed locally. For specific steps, please refer
   to [Deploy TDengine](https://docs.tdengine.com/get-started/deploy-from-package/). Please make sure taosd and
   taosAdapter have been started.
