@@ -175,7 +175,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             catch (Exception)
             {
                 _pendingRequests.TryRemove(reqId, out _);
-                DoClose();
                 throw;
             }
 
@@ -218,7 +217,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (completedTask == timeoutTask)
                 {
                     if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
-                    DoClose(new TimeoutException("Request timed out"));
                     throw new TimeoutException($"Request timed out. reqId: {reqId}");
                 }
 
@@ -244,7 +242,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             catch (Exception)
             {
                 _pendingRequests.TryRemove(reqId, out _);
-                DoClose();
                 throw;
             }
 
@@ -289,7 +286,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             catch (Exception)
             {
                 _pendingRequests.TryRemove(reqId, out _);
-                DoClose();
                 throw;
             }
 
@@ -353,7 +349,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             catch (Exception)
             {
                 _pendingRequests.TryRemove(reqId, out _);
-                DoClose();
                 throw;
             }
 
