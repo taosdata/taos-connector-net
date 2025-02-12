@@ -615,8 +615,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             {
                 case null:
                     return true;
-                case TimeoutException _:
-                    return false;
                 case WebSocketException _:
                     return false;
                 case AggregateException ae:
@@ -638,7 +636,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             return te.Code != (int)TDengineError.InternalErrorCode.WS_CONNECTION_CLOSED &&
                    te.Code != (int)TDengineError.InternalErrorCode.WS_RECEIVE_CLOSE_FRAME &&
-                   te.Code != (int)TDengineError.InternalErrorCode.WS_WRITE_TIMEOUT &&
                    te.Code != (int)TDengineError.InternalErrorCode.WS_UNEXPECTED_MESSAGE &&
                    te.Code != (int)TDengineError.InternalErrorCode.WS_RECONNECT_FAILED;
         }
