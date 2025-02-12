@@ -210,7 +210,7 @@ namespace Driver.Test.Client.Query
                         }
                         catch (InvalidOperationException e)
                         {
-                            Assert.Equal($"Request with reqId '{reqid}' already exists.", e.Message);
+                            Assert.Equal($"Request with reqId '0x{reqid:x}' already exists.", e.Message);
                             haveException = true;
                         }
                     }));

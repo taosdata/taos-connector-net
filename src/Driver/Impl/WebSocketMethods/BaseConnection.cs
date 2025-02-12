@@ -217,7 +217,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (completedTask == timeoutTask)
                 {
                     if (_pendingRequests.TryRemove(reqId, out var removedTcs)) removedTcs.TrySetCanceled();
-                    throw new TimeoutException($"Request timed out. reqId: {reqId}");
+                    throw new TimeoutException($"Request timed out. reqId: 0x{reqId:x}");
                 }
 
                 cts.Cancel();
@@ -403,7 +403,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 var tcs = new TaskCompletionSource<WsMessage>();
                 if (!_pendingRequests.TryAdd(reqId, tcs))
                 {
-                    throw new InvalidOperationException($"Request with reqId '{reqId}' already exists.");
+                    throw new InvalidOperationException($"Request with reqId '0x{reqId:x}' already exists.");
                 }
 
                 return tcs;
