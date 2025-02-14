@@ -8,14 +8,15 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             TDengineSchemalessPrecision precision,
             int ttl, long reqId)
         {
+            var uReqId = (ulong)reqId;
             return SendJsonBackJson<WSSchemalessReq, WSSchemalessResp>(WSAction.SchemalessWrite, new WSSchemalessReq
             {
-                ReqId = (ulong)reqId,
+                ReqId = uReqId,
                 Protocol = (int)protocol,
                 Precision = TDengineConstant.SchemalessPrecisionString(precision),
                 TTL = ttl,
                 Data = lines,
-            });
+            },uReqId);
         }
     }
 }

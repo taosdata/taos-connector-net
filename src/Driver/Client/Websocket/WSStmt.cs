@@ -5,11 +5,11 @@ namespace TDengine.Driver.Client.Websocket
 {
     public class WSStmt : IStmt
     {
-        private ulong _stmt;
+        private readonly ulong _stmt;
         private readonly TimeZoneInfo _tz;
-        private Connection _connection;
-        private bool closed;
-        private long lastAffected;
+        private readonly Connection _connection;
+        private bool _closed;
+        private long _lastAffected;
         private bool _isInsert;
 
         public WSStmt(ulong stmt, TimeZoneInfo tz, Connection connection)
@@ -22,13 +22,18 @@ namespace TDengine.Driver.Client.Websocket
 
         public void Dispose()
         {
-            if (closed)
-            {
-                return;
-            }
+            if (_closed) return;
 
-            _connection.StmtClose(_stmt);
-            closed = true;
+            _closed = true;
+            if (_connection == null || !_connection.IsAvailable()) return;
+            try
+            {
+                _connection.StmtClose(_stmt);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public void Prepare(string query)
@@ -219,12 +224,12 @@ namespace TDengine.Driver.Client.Websocket
         public void Exec()
         {
             var resp = _connection.StmtExec(_stmt);
-            lastAffected = resp.Affected;
+            _lastAffected = resp.Affected;
         }
 
         public long Affected()
         {
-            return lastAffected;
+            return _lastAffected;
         }
 
         public IRows Result()
@@ -233,6 +238,7 @@ namespace TDengine.Driver.Client.Websocket
             {
                 return new WSRows((int)Affected());
             }
+
             var resp = _connection.StmtUseResult(_stmt);
             return new WSRows(resp, _connection, _tz);
         }
