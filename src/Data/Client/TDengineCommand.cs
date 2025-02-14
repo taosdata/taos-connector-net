@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Common;
 using System.Collections.Generic;
-
 using TDengine.Driver;
 
 namespace TDengine.Data.Client
@@ -24,7 +23,6 @@ namespace TDengine.Data.Client
         public TDengineCommand(TDengineConnection connection)
         {
             _connection = connection;
-            _stmt = connection.client.StmtInit();
         }
 
         public override void Cancel()
@@ -127,7 +125,9 @@ namespace TDengine.Data.Client
         protected override DbConnection DbConnection
         {
             get => _connection;
-            set => _connection = value as TDengineConnection ?? throw new ArgumentException($"The specified connection is not of type {nameof(TDengineConnection)}.");
+            set => _connection = value as TDengineConnection ??
+                                 throw new ArgumentException(
+                                     $"The specified connection is not of type {nameof(TDengineConnection)}.");
         }
 
         protected override DbParameterCollection DbParameterCollection => _parameters.Value;
@@ -151,20 +151,22 @@ namespace TDengine.Data.Client
 
         private IRows Statement()
         {
-            if(_stmt == null && _connection != null)
+            if (!_parameters.IsValueCreated || _parameters.Value.Count == 0)
+            {
+                return Query();
+            }
+
+            if (_stmt == null && _connection != null)
             {
                 _stmt = _connection.client.StmtInit();
             }
+
+            if (_stmt == null) throw new InvalidOperationException("Statement is null");
 
             if (!_isPrepared)
             {
                 _isPrepared = true;
                 _stmt.Prepare(_commandText);
-            }
-
-            if (!_parameters.IsValueCreated || _parameters.Value.Count == 0)
-            {
-                return Query();
             }
 
             var isInsert = _stmt.IsInsert();
