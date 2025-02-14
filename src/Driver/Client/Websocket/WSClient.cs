@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net.WebSockets;
 using TDengine.Driver.Impl.WebSocketMethods;
 
 namespace TDengine.Driver.Client.Websocket
@@ -70,11 +69,8 @@ namespace TDengine.Driver.Client.Websocket
                 return;
             lock (_reconnectLock)
             {
-                if (_connection != null)
-                {
-                    // connection is available, no need to reconnect
-                    if (_connection.IsAvailable()) return;
-                }
+                if (_connection != null && _connection.IsAvailable()) // connection is available, no need to reconnect
+                    return;
 
                 Connection connection = null;
                 for (int i = 0; i < _builder.ReconnectRetryCount; i++)

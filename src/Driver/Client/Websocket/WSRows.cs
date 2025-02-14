@@ -97,15 +97,17 @@ namespace TDengine.Driver.Client.Websocket
 
         public void Dispose()
         {
-            if (_freed)
-            {
-                return;
-            }
+            if (_freed) return;
 
             _freed = true;
-            if (_connection != null && _connection.IsAvailable())
+            if (_connection == null || !_connection.IsAvailable()) return;
+            try
             {
                 _connection.FreeResult(_resultId);
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
 
